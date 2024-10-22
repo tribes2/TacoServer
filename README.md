@@ -1,4 +1,4 @@
-![Tribes 2](https://cdn.discordapp.com/attachments/521797012014759970/678460505597149214/TacoServer.png)
+![Tribes 2](https://media.discordapp.net/attachments/1160685717303861413/1160685718176280666/68747470733a2f2f63646e2e646973636f72646170702e636f6d2f6174746163686d656e74732f3532313739373031323031343735393937302f3637383436303530353539373134393231342f5461636f5365727665722e706e67.png?ex=671814cf&is=6716c34f&hm=7d071d3b2e221ad89b80de48f91e4ed17d548573c16ed512f3a03efaa719b605&)
 
 # TacoServer
 ## A Tribes 2 server with competitive features that is also open-source.
@@ -6,7 +6,7 @@
 ---
 
 
-Discord: [Tribes 2 Discord](https://discord.gg/Y4muNvF)
+Discord: [Tribes 2 Discord](https://playt2.com/discord)
 
 
 ### Features
