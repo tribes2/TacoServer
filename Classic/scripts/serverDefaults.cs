@@ -199,7 +199,6 @@ $Host::TKWarn2 = 8;																	//Max tks before 2nd warning
 $Host::KickObserverStartOnJoin = 0;													//Start KickObserver Timer as soon as player joins server
 $Host::KickObserverTimeout = 1200;													//How long player can stay in observer before being booted (1200 is 20 mins)
 //$Host::ClassicBanlist = "prefs/banlist.cs";
-$Host::dtBanlist = "prefs/dtBanlist.cs";											//Alternate Ban System
 $Host::VoteCooldown = 120;															//Time cooldown that dosnt allow a player to vote again after theyve initiated a vote (120 is 2 mins)
 $Host::VoteDelayTime = 120;															//Delay the ability to vote (For everyone) at the beginning of the match (120 is 2 minutes)
 $Host::ClassicTeamKillLog = 1;                                                      //Enable/Disable Teamkill Logging
