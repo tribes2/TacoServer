@@ -145,6 +145,7 @@ function CreateServer(%mission, %missionType)
    exec("scripts/defaultGame.cs");
    exec("scripts/CTFGame.cs");
    exec("scripts/SCtFGame.cs");
+   exec("scripts/LCTFGame.cs");
    exec("scripts/PracticeCTFGame.cs");
    exec("scripts/TeamHuntersGame.cs");
    exec("scripts/SinglePlayerGame.cs");
@@ -175,6 +176,7 @@ function CreateServer(%mission, %missionType)
          (%type !$= PracticeCTFGame)  &&
          (%type !$= RabbitGame)       &&
          (%type !$= SCtFGame)         &&
+         (%type !$= LCTFGame)         &&
          (%type !$= SiegeGame)        &&
          (%type !$= SinglePlayerGame) &&
          (%type !$= TeamHuntersGame)  &&

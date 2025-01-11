@@ -54,7 +54,7 @@ function GetTeamCounts(%game)
 
 			if(!$Host::TournamentMode)
 			{
-				if($CurrentMissionType $= "CTF") //No SCtF
+				if($CurrentMissionType $= "CTF") //No LCTF
 					NBRStatusNotify(%game); //Base Rape
 
 				if($CurrentMissionType $= "CTF" || $CurrentMissionType $= "DM")
