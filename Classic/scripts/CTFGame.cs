@@ -779,7 +779,7 @@ function CTFGame::beginStalemate(%game)
    {
       messageAll( 'MsgStalemate', "\c3Anti turtle initialized. Flags will be returned to bases in " @ $Host::ClassicAntiTurtleTime @ " minutes.");
       %game.turtleSchedule = %game.schedule($Host::ClassicAntiTurtleTime * 60000, "antiTurtle");
-	  error(formatTimeString("HH:nn:ss") SPC "Anti-Turtle thread beginning now - ID:" SPC %game.turtleSchedule);
+	   error(formatTimeString("HH:nn:ss") SPC "Anti-Turtle thread beginning now - ID:" SPC %game.turtleSchedule);
    }
 }
 
@@ -1226,7 +1226,6 @@ function CTFGame::awardScoreFlagTouch(%game, %cl, %flag)
    $dontScoreTimer[%team] = true;
    //tinman - needed to remove all game calls to "eval" for the PURE server...
    %game.schedule(%game.TOUCH_DELAY_MS, resetDontScoreTimer, %team);
-   //schedule(%game.TOUCH_DELAY_MS, 0, eval, "$dontScoreTimer["@%team@"] = false;");
    //schedule(%game.TOUCH_DELAY_MS, 0, eval, "$dontScoreTimer["@%team@"] = false;");
    $TeamScore[%team] += %game.SCORE_PER_TEAM_FLAG_TOUCH;
    messageAll('MsgTeamScoreIs', "", %team, $TeamScore[%team]);
