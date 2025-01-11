@@ -1170,10 +1170,14 @@ function LakRabbitGame::sendGameVoteMenu( %game, %client, %key )
 	%isAdmin = ( %client.isAdmin || %client.isSuperAdmin );
 
 	if(!%client.canVote && !%isAdmin)
-      return;
+    	return;
 
 	if( %game.scheduleVote $= "" )
 	{
+		//echo(%client.ForceVote);
+		if(%client.ForceVote $= "skip_confirm")
+			return;
+
 		if(!%isAdmin || (%isAdmin && %client.ForceVote))
 		{
 			if(!Game.duelMode)

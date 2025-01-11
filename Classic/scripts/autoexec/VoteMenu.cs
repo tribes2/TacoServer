@@ -49,10 +49,10 @@ function DefaultGame::sendGameVoteMenu(%game, %client, %key)
    {
       if(!$Host::TournamentMode)
          messageClient(%client, 'MsgVoteItem', "", %key, 'VoteTournamentMode', 'change server to Tournament.', 'Vote Tournament Mode');
-      messageClient(%client, 'MsgVoteItem', "", %key, 'VoteChangeMission', 'change the mission to', 'Vote to Change the Mission');
-      messageClient(%client, 'MsgVoteItem', "", %key, 'VoteNextMission', 'set next mission to', 'Vote to Set the Next Mission');
-      messageClient(%client, 'MsgVoteItem', "", %key, 'VoteChangeTimeLimit', 'change the time limit', 'Vote to Change the Time Limit');
-      messageClient(%client, 'MsgVoteItem', "", %key, 'VoteSkipMission', 'skip the mission to', 'Vote to Skip Mission' );
+         messageClient(%client, 'MsgVoteItem', "", %key, 'VoteChangeMission', 'change the mission to', 'Vote to Change the Mission');
+         messageClient(%client, 'MsgVoteItem', "", %key, 'VoteNextMission', 'set next mission to', 'Vote to Set the Next Mission');
+         messageClient(%client, 'MsgVoteItem', "", %key, 'VoteChangeTimeLimit', 'change the time limit', 'Vote to Change the Time Limit');
+         messageClient(%client, 'MsgVoteItem', "", %key, 'VoteSkipMission', 'skip the mission to', 'Vote to Skip Mission' );
       if(%multipleTeams)
       {
          if($teamDamage)
@@ -61,6 +61,12 @@ function DefaultGame::sendGameVoteMenu(%game, %client, %key)
             messageClient(%client, 'MsgVoteItem', "", %key, 'VoteTeamDamage', 'enable team damage', 'Vote to Enable Team Damage');
       }
       messageClient(%client, 'MsgVoteItem',"",  %key, 'ForceVote', 'Cancel Force Vote', "Cancel 'Vote To...'");
+      return;
+   }
+   else if (%client.ForceVote $= "skip_confirm") //Skip mission Confirm cuz its so annoying
+   {
+      messageClient(%client, 'MsgVoteItem', "", %key, 'VoteSkipConfirm', 'Are you sure you want to Skip the Mission?','Are you sure you want to Skip the Mission?');
+      messageClient(%client, 'MsgVoteItem', "", %key, 'VoteSkipMission', 'Yes, Skip the Mission', 'Yes, Skip the Mission' );
       return;
    }
 
@@ -79,7 +85,7 @@ function DefaultGame::sendGameVoteMenu(%game, %client, %key)
    {
       switch$($CurrentMissionType)
       {
-			case CTF or SCtF:
+			case CTF or SCtF or LCTF:
 				if($Host::TournamentMode)
                %showTL = " - Time Limit:" SPC $Host::TimeLimit SPC "Minutes";
             if($voteNext)
@@ -191,7 +197,7 @@ function DefaultGame::sendGameVoteMenu(%game, %client, %key)
             messageClient(%client, 'MsgVoteItem', "", %key, 'VoteSkipMission', 'skip the mission to', 'Vote to Skip Mission' );
       }
       else
-         messageClient(%client, 'MsgVoteItem', "", %key, 'VoteSkipMission', 'skip the mission to', 'Skip the Mission' );
+         messageClient(%client, 'MsgVoteItem', "", %key, 'VoteSkipConfirm', 'skip the mission to', 'Skip the Mission' );
       //Admin Vote Menu
       if(%client.isAdmin && $Host::AllowAdminVotes)
             messageClient(%client, 'MsgVoteItem', "", %key, 'ForceVote', 'Vote to ...', 'Vote to ...');
@@ -547,6 +553,15 @@ function serverCmdStartNewVote(%client, %typeName, %arg1, %arg2, %arg3, %arg4, %
 				%msg = %client.nameBase @ " initiated a vote to " @ ($FairTeams == 0 ? "enable" : "disable") @ " fair teams.";
 			}
 
+		case "VoteSkipConfirm":
+			if(%isAdmin && %client.ForceVote !$= "skip_confirm")
+			{
+            %client.ForceVote = "skip_confirm";
+            return;
+			}
+         else
+            %client.ForceVote = 0;
+
 		case "VoteSkipMission":
 			if((!%isAdmin && $Host::AllowPlayerVoteSkipMission) || (%isAdmin && %client.ForceVote))
 			{
@@ -840,12 +855,12 @@ function serverCmdStartNewVote(%client, %typeName, %arg1, %arg2, %arg3, %arg4, %
 				%msg = %client.nameBase @ " initiated a vote to " @ (Game.DMSLOnlyMode == 0 ? "enable" : "disable") @ " shocklance only mode.";
 
       //LCTF Stuff
-		case "SCtFProMode":
-			if(!$CurrentMissionType $= "sctf")
+		case "LCTFProMode":
+			if(!$CurrentMissionType $= "LCTF")
 				return;
 
 			if(!%isAdmin || (%isAdmin && %client.ForceVote))
-				%msg = %client.nameBase @ " initiated a vote to " @ (Game.SCtFProMode == 0 ? "enable" : "disable") @ " pro mode.";
+				%msg = %client.nameBase @ " initiated a vote to " @ (Game.LCTFProMode == 0 ? "enable" : "disable") @ " pro mode.";
 
 		case "showServerRules":
 			if (($Host::ServerRules[1] !$= "") && (!%client.CantView))
