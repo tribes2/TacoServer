@@ -1,4 +1,4 @@
-// DisplayName = LCTF
+// DisplayName = Spawn CtF
 
 //--- GAME RULES BEGIN ---
 //Prevent enemy from capturing your flag
@@ -263,170 +263,34 @@ package SCtFGame
          cancel(%obj.lavaEnterThread);
    }
 
-	function stationTrigger::onEnterTrigger(%data, %obj, %colObj)
-	{
-		//make sure it's a player object, and that that object is still alive
-		if(%colObj.getDataBlock().className !$= "Armor" || %colObj.getState() $= "Dead")
-			return;
-
-		// z0dd - ZOD, 7/13/02 Part of hack to keep people from mounting
-		// vehicles in disallowed armors.
-		if(%obj.station.getDataBlock().getName() !$= "StationVehicle")
-			%colObj.client.inInv = true;
-
-			%colObj.inStation = true;
-			commandToClient(%colObj.client,'setStationKeys', true);
-		if(Game.stationOnEnterTrigger(%data, %obj, %colObj))
-		{
-		//verify station.team is team associated and isn't on player's team
-		if((%obj.mainObj.team != %colObj.client.team) && (%obj.mainObj.team != 0))
-		{
-			//%obj.station.playAudio(2, StationAccessDeniedSound);
-			messageClient(%colObj.client, 'msgStationDenied', '\c2Access Denied -- Wrong team.~wfx/powered/station_denied.wav');
-		}
-		else if(%obj.disableObj.isDisabled())
-		{
-			//messageClient(%colObj.client, 'msgStationDisabled', '\c2Station is disabled.');
-		}
-		else if(!%obj.mainObj.isPowered())
-		{
-			messageClient(%colObj.client, 'msgStationNoPower', '\c2Station is not powered.');
-		}
-		else if(%obj.station.notDeployed)
-		{
-			messageClient(%colObj.client, 'msgStationNotDeployed', '\c2Station is not deployed.');
-		}
-		else if(%obj.station.triggeredBy $= "")
-		{
-			if(%obj.station.getDataBlock().setPlayersPosition(%obj.station, %obj, %colObj))
-			{
-				messageClient(%colObj.client, 'CloseHud', "", 'inventoryScreen');
-				commandToClient(%colObj.client, 'TogglePlayHuds', true);
-				%obj.station.triggeredBy = %colObj;
-				%obj.station.getDataBlock().stationTriggered(%obj.station, 1);
-				%colObj.station = %obj.station;
-				%colObj.lastWeapon = ( %colObj.getMountedImage($WeaponSlot) == 0 ) ? "" : %colObj.getMountedImage($WeaponSlot).item;
-				%colObj.unmountImage($WeaponSlot);
-				}
-			}
-		}
-	}
-
-	function deployMineCheck(%mineObj, %player)
-	{
-		// explode it vgc
-		schedule(2000, %mineObj, "explodeMine", %mineObj, true);
-	}
-
-    //Take out anything vehicle related
-	function Armor::damageObject(%data, %targetObject, %sourceObject, %position, %amount, %damageType, %momVec, %mineSC)
-	{
-	   //error("Armor::damageObject( "@%data@", "@%targetObject@", "@%sourceObject@", "@%position@", "@%amount@", "@%damageType@", "@%momVec@" )");
-	   if(%targetObject.invincible || %targetObject.getState() $= "Dead")
-		  return;
-
-	   %targetClient = %targetObject.getOwnerClient();
-	   if(isObject(%mineSC))
-		  %sourceClient = %mineSC;
-	   else
-		  %sourceClient = isObject(%sourceObject) ? %sourceObject.getOwnerClient() : 0;
-
-	   %targetTeam = %targetClient.team;
-
-		// if the source object is a player object, player's don't have sensor groups
-		// if it's a turret, get the sensor group of the target
-		// if its a vehicle (of any type) use the sensor group
-		if (%sourceClient)
-			%sourceTeam = %sourceClient.getSensorGroup();
-		else if(%damageType == $DamageType::Suicide)
-			%sourceTeam = 0;
-
-		// if teamdamage is off, and both parties are on the same team
-		// (but are not the same person), apply no damage
-		if(!$teamDamage && (%targetClient != %sourceClient) && (%targetTeam == %sourceTeam))
-			return;
-
-		if(%targetObject.isShielded && %damageType != $DamageType::Blaster)
-			%amount = %data.checkShields(%targetObject, %position, %amount, %damageType);
-
-		if(%amount == 0)
-			return;
-
-		// Set the damage flash
-		%damageScale = %data.damageScale[%damageType];
-		if(%damageScale !$= "")
-			%amount *= %damageScale;
-
-		if(%damageType == $DamageType::Laser && $InvBanList[SctF, "SniperRifle"]) //banned
-			return;
-
-		%flash = %targetObject.getDamageFlash() + (%amount * 2);
-		if (%flash > 0.75)
-			%flash = 0.75;
-
-		// Teratos: Originally from Eolk? Mine+Disc tracking/death message support.
-		// No Schedules by DarkTiger Ver.2
-		%targetClient.mineDisc = false;
-		switch$(%damageType)
-		{
-		   case $DamageType::Disc:
-			  if((getSimTime() - %targetClient.mdcTime1) < 256)
-				%targetClient.mineDisc = true;
-
-			  %targetClient.mdcTime2 = getSimTime();
-
-		   case $DamageType::Mine:
-			  if((getSimTime() - %targetClient.mdcTime2) < 256)
-				%targetClient.mineDisc = true;
-
-			  %targetClient.mdcTime1 = getSimTime();
-		}
-		// -- End Mine+Disc insert.
-
-		%previousDamage = %targetObject.getDamagePercent();
-		%targetObject.setDamageFlash(%flash);
-		%targetObject.applyDamage(%amount);
-		Game.onClientDamaged(%targetClient, %sourceClient, %damageType, %sourceObject);
-
-		%targetClient.lastDamagedBy = %damagingClient;
-		%targetClient.lastDamaged = getSimTime();
-
-		//now call the "onKilled" function if the client was... you know...
-		if(%targetObject.getState() $= "Dead")
-		{
-			// where did this guy get it?
-			%damLoc = %targetObject.getDamageLocation(%position);
-
-			// should this guy be blown apart?
-			if( %damageType == $DamageType::Explosion ||
-				%damageType == $DamageType::Mortar ||
-				%damageType == $DamageType::SatchelCharge ||
-				%damageType == $DamageType::Missile )
-			{
-				if( %previousDamage >= 0.35 ) // only if <= 35 percent damage remaining
-				{
-					%targetObject.setMomentumVector(%momVec);
-					%targetObject.blowup();
-				}
-			}
-
-			// If we were killed, max out the flash
-			%targetObject.setDamageFlash(0.75);
-
-			%damLoc = %targetObject.getDamageLocation(%position);
-			Game.onClientKilled(%targetClient, %sourceClient, %damageType, %sourceObject, %damLoc);
-	    }
-		else if ( %amount > 0.1 )
-		{
-			if( %targetObject.station $= "" && %targetObject.isCloaked() )
-			{
-				%targetObject.setCloaked( false );
-				%targetObject.reCloak = %targetObject.schedule( 500, "setCloaked", true );
-			}
-
-			playPain( %targetObject );
-		}
-	}
+   function ProjectileData::onCollision(%data, %projectile, %targetObject, %modifier, %position, %normal)
+   {
+      if(!isObject(%targetObject) && !isObject(%projectile.sourceObject))
+         return;
+      if(!(%targetObject.getType() & ($TypeMasks::StaticTSObjectType | $TypeMasks::InteriorObjectType |
+                                      $TypeMasks::TerrainObjectType | $TypeMasks::WaterObjectType)))
+      {
+         if(%projectile.sourceObject.team !$= %targetObject.team)
+         {
+            if(%targetObject.getDataBlock().getClassName() $= "PlayerData" && %data.getName() $= "DiscProjectile")
+            {
+	         %mask = $TypeMasks::StaticShapeObjectType | $TypeMasks::InteriorObjectType | $TypeMasks::TerrainObjectType;
+	         %start = %targetObject.getWorldBoxCenter();
+               %distance = mFloor(VectorDist(%start, %projectile.initialPosition));
+	         %end = getWord(%start, 0) SPC getWord(%start, 1) SPC getWord(%start, 2) - 15;
+	         %grounded = ContainerRayCast(%start, %end, %mask, 0);
+               if(!%grounded)
+               {
+                  %projectile.sourceObject.client.scoreMidAir++;
+                  messageClient(%projectile.sourceObject.client, 'MsgMidAir', '\c0You received a %1 point bonus for a successful mid air shot.', Game.SCORE_PER_MIDAIR, %data.radiusDamageType, %distance);
+                  messageTeamExcept(%projectile.sourceObject.client, 'MsgMidAir', '\c5%1 hit a mid air shot.', %projectile.sourceObject.client.name, %data.radiusDamageType, %distance);
+                  Game.recalcScore(%projectile.sourceObject.client);
+               }
+            }
+         }
+         Parent::onCollision(%data, %projectile, %targetObject, %modifier, %position, %normal);
+      }
+   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -451,8 +315,6 @@ function SCtFGame::missionLoadDone(%game)
    echo( "starting camp thread..." );
    %game.campThread_1 = schedule( 1000, 0, "checkVehicleCamping", 1 );
    %game.campThread_2 = schedule( 1000, 0, "checkVehicleCamping", 2 );
-
-   deleteNonSCtFObjects();
 }
 
 function SCtFGame::clientMissionDropReady(%game, %client)
@@ -484,29 +346,10 @@ function SCtFGame::equip(%game, %player)
    %player.client.clearBackpackIcon();
    if(!%player.client.isAIControlled())
    {
-      if( !$Host::SCtFProMode )
-	  {
-		%player.setArmor($Sctf::Armor);
-		buyDeployableFavorites(%player.client);
-		%player.setEnergyLevel(%player.getDataBlock().maxEnergy);
-		%player.selectWeaponSlot( 0 );
-	  }
-	  else
-	  {
-		%player.clearInventory();
-		%player.setInventory(Disc,1);
-		%player.setInventory(Shocklance,1);
-		%player.setInventory(GrenadeLauncher,1);
-		%player.setInventory(DiscAmmo, %player.getDataBlock().max[DiscAmmo]);
-		%player.setInventory(GrenadeLauncherAmmo, %player.getDataBlock().max[GrenadeLauncherAmmo]);
-	    %player.setInventory(Grenade, %player.getDataBlock().max[Grenade]);
-	    %player.setInventory(Mine, %player.getDataBlock().max[Mine]);
-		%player.setInventory(RepairKit,1);
-		%player.setInventory(EnergyPack,1);
-        %player.setInventory(TargetingLaser, 1);
-        %player.setInventory(Beacon, %player.getDataBlock().max[Beacon]);
-		%player.use("Disc");
-	  }
+      %player.setArmor($Sctf::Armor);
+      buyDeployableFavorites(%player.client);
+      %player.setEnergyLevel(%player.getDataBlock().maxEnergy);
+      %player.selectWeaponSlot( 0 );
    }
    else
    {
@@ -603,7 +446,6 @@ function SCtFGame::gameOver(%game)
       $TeamScore[%j] = 0;
 }
 
-
 /////////////////////////////////////////////////////////////////////////////////////////
 // Flag Functions ///////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -672,6 +514,16 @@ function SCtFGame::playerTouchEnemyFlag(%game, %player, %flag)
    %game.playerGotFlagTarget(%player);
 
    //only cancel the return timer if the player is in bounds...
+   if(!%client.outOfBounds)
+   {
+      cancel($FlagReturnTimer[%flag]);
+      $FlagReturnTimer[%flag] = "";
+   }
+
+   %player.mountImage(FlagImage, $FlagSlot, true, %game.getTeamSkin(%flag.team));
+
+   %game.playerGotFlagTarget(%player);
+   //only cancel the return timer if the player is in bounds...
    if (!%client.outOfBounds)
    {
       cancel($FlagReturnTimer[%flag]);
@@ -694,7 +546,6 @@ function SCtFGame::playerTouchEnemyFlag(%game, %player, %flag)
          %game.stalemateSchedule = %game.schedule(%game.stalemateTimeMS, beginStalemate);
 
    }
-
    %flag.hide(true);
    %flag.startFade(0, 0, false);
    %flag.isHome = false;
@@ -707,12 +558,12 @@ function SCtFGame::playerTouchEnemyFlag(%game, %player, %flag)
 
    if(%grabspeed)
    {
-      messageTeamExcept(%client, 'MsgCTFFlagTaken', '\c2Teammate %1 took the %2 flag. (Speed: %5Kph)~wfx/misc/flag_snatch.wav', %client.name, %teamName, %flag.team, %client.nameBase, %grabspeed);
-      messageTeam(%flag.team, 'MsgCTFFlagTaken', '\c2Your flag has been taken by %1! (Speed: %5Kph)~wfx/misc/flag_taken.wav',%client.name, 0, %flag.team, %client.nameBase, %grabspeed);
-      messageTeam(0, 'MsgCTFFlagTaken', '\c2%1 took the %2 flag. (Speed: %5Kph)~wfx/misc/flag_snatch.wav', %client.name, %teamName, %flag.team, %client.nameBase, %grabspeed);
-      messageClient(%client, 'MsgCTFFlagTaken', '\c2You took the %2 flag. (Speed: %5Kph)~wfx/misc/flag_snatch.wav', %client.name, %teamName, %flag.team, %client.nameBase, %grabspeed);
+	  messageTeamExcept(%client, 'MsgCTFFlagTaken', '\c2Teammate %1 took the %2 flag. (Speed: %5Kph)~wfx/misc/flag_snatch.wav', %client.name, %teamName, %flag.team, %client.nameBase, %grabspeed);
+	  messageTeam(%flag.team, 'MsgCTFFlagTaken', '\c2Your flag has been taken by %1! (Speed: %5Kph)~wfx/misc/flag_taken.wav',%client.name, 0, %flag.team, %client.nameBase, %grabspeed);
+	  messageTeam(0, 'MsgCTFFlagTaken', '\c2%1 took the %2 flag. (Speed: %5Kph)~wfx/misc/flag_snatch.wav', %client.name, %teamName, %flag.team, %client.nameBase, %grabspeed);
+	  messageClient(%client, 'MsgCTFFlagTaken', '\c2You took the %2 flag. (Speed: %5Kph)~wfx/misc/flag_snatch.wav', %client.name, %teamName, %flag.team, %client.nameBase, %grabspeed);
 
-	  if(%grabspeed > 300)
+      if(%grabspeed > 300)
 		messageAll('', "~wfx/Bonuses/high-level4-blazing.wav");
    }
    else
@@ -822,7 +673,6 @@ function SCtFGame::flagCap(%game, %player)
    %held = %game.formatTime(getSimTime() - %game.flagHeldTime[%flag], true); // z0dd - ZOD, 8/15/02. How long did player hold flag?
 
    %game.playerLostFlagTarget(%player);
-
    //award points to player and team
    %teamName = %game.getTeamName(%flag.team);
    messageTeamExcept(%client, 'MsgCTFFlagCapped', '\c2%1 captured the %2 flag! (Held: %5)~wfx/misc/flag_capture.wav', %client.name, %teamName, %flag.team, %client.team, %held);
@@ -830,7 +680,7 @@ function SCtFGame::flagCap(%game, %player)
    messageTeam(0, 'MsgCTFFlagCapped', '\c2%1 captured the %2 flag! (Held: %5)~wfx/misc/flag_capture.wav', %client.name, %teamName, %flag.team, %client.team, %held);
    messageClient(%client, 'MsgCTFFlagCapped', '\c2You captured the %2 flag! (Held: %5)~wfx/misc/flag_capture.wav', %client.name, %teamName, %flag.team, %client.team, %held); // Yogi, 8/18/02.  3rd param changed 0 -> %client.name
 
-   logEcho(%client.nameBase@" (pl "@%player@"/cl "@%client@") capped team "@%client.team@" flag"@" (Held: "@%held@")");
+   logEcho(%client.nameBase@" (pl "@%player@"/cl "@%client@") capped team "@%client.team@" flag"@" (Held: "@%held@")"); // MP: 6/14/2011 The team is wrong, but the stats program auto-corrects it, so just leave as is
    %player.holdingFlag = ""; //no longer holding it.
    %player.unMountImage($FlagSlot);
    %game.awardScoreFlagCap(%client, %flag);
@@ -997,7 +847,7 @@ function SCtFGame::beginStalemate(%game)
    {
       messageAll( 'MsgStalemate', "\c3Anti turtle initialized. Flags will be returned to bases in " @ $Host::ClassicAntiTurtleTime @ " minutes.");
       %game.turtleSchedule = %game.schedule($Host::ClassicAntiTurtleTime * 60000, "antiTurtle");
-	  error(formatTimeString("HH:nn:ss") SPC "Anti-Turtle thread beginning now - ID:" SPC %game.turtleSchedule);
+	   error(formatTimeString("HH:nn:ss") SPC "Anti-Turtle thread beginning now - ID:" SPC %game.turtleSchedule);
    }
 }
 
@@ -1009,7 +859,8 @@ function SCtFGame::endStalemate(%game)
    cancel(%game.turtleSchedule);
 }
 
-function SCtFGame::antiTurtle(%game)
+// z0dd - ZOD, 5/27/03. Anti-turtle function
+function CTFGame::antiTurtle(%game)
 {
    if(isEventPending(%game.turtleSchedule))
 	  cancel(%game.turtleSchedule);
@@ -1035,7 +886,7 @@ function SCtFGame::flagReset(%game, %flag)
    cancel(%game.updateFlagThread[%flag]); // z0dd - ZOD, 8/4/02. Cancel this flag's thread to KineticPoet's flag updater
 
    //any time a flag is reset, kill the stalemate schedule
-   %game.endStalemate();
+   %game.endStalemate(%game);
 
    //make sure if there's a player carrying it (probably one out of bounds...), it is stripped first
    if (isObject(%flag.carrier))
@@ -1075,6 +926,7 @@ function SCtFGame::flagReset(%game, %flag)
    {
       cancel(%flag.searchSchedule);
    }
+   // --------------------------------------------------------------------------
 }
 
 function SCtFGame::notifyMineDeployed(%game, %mine)
@@ -1339,7 +1191,7 @@ function SCtFGame::awardScoreFlagTouch(%game, %cl, %flag)
 {
 
     %flag.grabber = %cl;
-	%flag.grabber.flagGrabs++; //moved from awardScoreFlagCap to correctly count flaggrabs
+    %flag.grabber.flagGrabs++; //moved from awardScoreFlagCap to correctly count flaggrabs
     %team = %cl.team;
 	if( $DontScoreTimer[%team] )
 		return;
@@ -1347,7 +1199,6 @@ function SCtFGame::awardScoreFlagTouch(%game, %cl, %flag)
    $dontScoreTimer[%team] = true;
    //tinman - needed to remove all game calls to "eval" for the PURE server...
    %game.schedule(%game.TOUCH_DELAY_MS, resetDontScoreTimer, %team);
-   //schedule(%game.TOUCH_DELAY_MS, 0, eval, "$dontScoreTimer["@%team@"] = false;");
    //schedule(%game.TOUCH_DELAY_MS, 0, eval, "$dontScoreTimer["@%team@"] = false;");
    $TeamScore[%team] += %game.SCORE_PER_TEAM_FLAG_TOUCH;
    messageAll('MsgTeamScoreIs', "", %team, $TeamScore[%team]);
@@ -1379,8 +1230,6 @@ function SCtFGame::checkScoreLimit(%game, %team)
 
 function SCtFGame::awardScoreFlagReturn(%game, %cl, %perc)
 {
-   %cl.flagReturns++; //give flagreturn stat
-
    if (%game.SCORE_PER_FLAG_RETURN != 0)
    {
       %pts = mfloor( %game.SCORE_PER_FLAG_RETURN * (%perc/100) );
@@ -2117,272 +1966,170 @@ function SCtFGame::startFlagCollisionSearch(%game, %flag)
 // VOTING ///////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 
+// function SCTFGame::sendGameVoteMenu(%game, %client, %key)
+// {
+//    DefaultGame::sendGameVoteMenu(%game, %client, %key);
+//    if ( %game.scheduleVote $= "" )
+//    {
+//       if(%client.isAdmin)
+//          messageClient( %client, 'MsgVoteItem', "", %key, 'VoteAntiTurtleTime', 'change the anti turtle time to', 'Change Anti-Turtle time' );
+//       else
+//         messageClient( %client, 'MsgVoteItem', "", %key, 'VoteAntiTurtleTime', 'change the anti turtle time to', 'Vote Anti-Turtle time' );
+//    }
+// }
+
+// function SCTFGame::evalVote(%game, %typeName, %admin, %arg1, %arg2, %arg3, %arg4)
+// {
+//    DefaultGame::evalVote(%game, %typeName, %admin, %arg1, %arg2, %arg3, %arg4);
+//    switch$ (%typeName)
+//    {
+//       case "voteAntiTurtleTime":
+//          %game.voteAntiTurtleTime(%admin, %arg1, %arg2, %arg3, %arg4);
+//    }
+// }
+
+// function SCTFGame::sendAntiTurtleTimeList( %game, %client, %key )
+// {
+//    messageClient( %client, 'MsgVoteItem', "", %key, 6, "", '6 minutes' );
+//    messageClient( %client, 'MsgVoteItem', "", %key, 8, "", '8 minutes' );
+//    messageClient( %client, 'MsgVoteItem', "", %key, 10, "", '10 minutes' );
+//    messageClient( %client, 'MsgVoteItem', "", %key, 12, "", '12 minutes' );
+//    messageClient( %client, 'MsgVoteItem', "", %key, 14, "", '14 minutes' );
+//    messageClient( %client, 'MsgVoteItem', "", %key, 16, "", '16 minutes' );
+//    messageClient( %client, 'MsgVoteItem', "", %key, 18, "", '18 minutes' );
+//    messageClient( %client, 'MsgVoteItem', "", %key, 200, "", 'Disable Anti Turtle' );
+// }
+
 function SCtFGame::sendGameVoteMenu(%game, %client, %key)
 {
-   parent::sendGameVoteMenu( %game, %client, %key );
-
-   %isAdmin = ( %client.isAdmin || %client.isSuperAdmin );
-
-   if(!%client.canVote && !%isAdmin)
-      return;
-
-   if(%game.scheduleVote $= "")
+   DefaultGame::sendGameVoteMenu(%game, %client, %key);
+   if ( %game.scheduleVote $= "" )
    {
+      //echo(%client.ForceVote);
+      if(%client.ForceVote $= "skip_confirm")
+         return;
+
       if(!%isAdmin || (%isAdmin && %client.ForceVote))
       {
-         //messageClient( %client, 'MsgVoteItem', "", %key, 'VoteArmorClass', 'change the armor class to', 'Vote to change the Armor class' );
+         messageClient( %client, 'MsgVoteItem', "", %key, 'VoteArmorClass', 'change the armor class to', 'Vote to change the Armor class' );
          //messageClient( %client, 'MsgVoteItem', "", %key, 'VoteAntiTurtleTime', 'change the anti turtle time to', 'Vote Anti-Turtle time' );
-         if(!$Host::SCtFProMode)
-            messageClient( %client, 'MsgVoteItem', "", %key, 'SCtFProMode', 'Enable Pro Mode (Disc, SL, GL Only)', 'Vote to enable Pro Mode (Disc, SL, GL Only)' );
-         else
-            messageClient( %client, 'MsgVoteItem', "", %key, 'SCtFProMode', 'Disable Pro Mode (Disc, SL, GL Only)', 'Vote to disable Pro Mode (Disc, SL, GL Only)' );
       }
       else
       {
-         if(!$Host::SCtFProMode)
-            messageClient( %client, 'MsgVoteItem', "", %key, 'SCtFProMode', 'Enable Pro Mode (Disc, SL, GL Only)', 'Enable Pro Mode (Disc, SL, GL Only)' );
-         else
-            messageClient( %client, 'MsgVoteItem', "", %key, 'SCtFProMode', 'Disable Pro Mode (Disc, SL, GL Only)', 'Disable Pro Mode (Disc, SL, GL Only)' );
+         messageClient( %client, 'MsgVoteItem', "", %key, 'VoteArmorClass', 'change the armor class to', 'Change the Armor class' );
+         //messageClient( %client, 'MsgVoteItem', "", %key, 'VoteAntiTurtleTime', 'change the anti turtle time to', 'Change Anti-Turtle time' );
       }
-      //messageClient( %client, 'MsgVoteItem', "", %key, 'VoteArmorClass', 'change the armor class to', 'Change the Armor class' );
-      //messageClient( %client, 'MsgVoteItem', "", %key, 'VoteAntiTurtleTime', 'change the anti turtle time to', 'Change Anti-Turtle time' );
    }
 }
 
-//function SCtFGame::sendAntiTurtleTimeList( %game, %client, %key )
-//{
-//   messageClient( %client, 'MsgVoteItem', "", %key, 6, "", '6 minutes' );
-//   messageClient( %client, 'MsgVoteItem', "", %key, 8, "", '8 minutes' );
-//   messageClient( %client, 'MsgVoteItem', "", %key, 10, "", '10 minutes' );
-//   messageClient( %client, 'MsgVoteItem', "", %key, 12, "", '12 minutes' );
-//   messageClient( %client, 'MsgVoteItem', "", %key, 14, "", '14 minutes' );
-//   messageClient( %client, 'MsgVoteItem', "", %key, 16, "", '16 minutes' );
-//   messageClient( %client, 'MsgVoteItem', "", %key, 18, "", '18 minutes' );
-//   messageClient( %client, 'MsgVoteItem', "", %key, 200, "", 'Disable Anti Turtle' );
-//}
+// function SCtFGame::sendAntiTurtleTimeList( %game, %client, %key )
+// {
+//    messageClient( %client, 'MsgVoteItem', "", %key, 6, "", '6 minutes' );
+//    messageClient( %client, 'MsgVoteItem', "", %key, 8, "", '8 minutes' );
+//    messageClient( %client, 'MsgVoteItem', "", %key, 10, "", '10 minutes' );
+//    messageClient( %client, 'MsgVoteItem', "", %key, 12, "", '12 minutes' );
+//    messageClient( %client, 'MsgVoteItem', "", %key, 14, "", '14 minutes' );
+//    messageClient( %client, 'MsgVoteItem', "", %key, 16, "", '16 minutes' );
+//    messageClient( %client, 'MsgVoteItem', "", %key, 18, "", '18 minutes' );
+//    messageClient( %client, 'MsgVoteItem', "", %key, 200, "", 'Disable Anti Turtle' );
+// }
 
-//function SCtFGame::sendArmorClassList(%game, %client, %key)
-//{
-//   messageClient( %client, 'MsgVoteItem', "", %key, "Light", "", 'Light Class' );
-//   messageClient( %client, 'MsgVoteItem', "", %key, "Medium", "", 'Medium Class' );
-//   messageClient( %client, 'MsgVoteItem', "", %key, "Heavy", "", 'Heavy Class' );
-//}
+function SCtFGame::sendArmorClassList(%game, %client, %key)
+{
+   messageClient( %client, 'MsgVoteItem', "", %key, "Light", "", 'Light Class' );
+   messageClient( %client, 'MsgVoteItem', "", %key, "Medium", "", 'Medium Class' );
+   messageClient( %client, 'MsgVoteItem', "", %key, "Heavy", "", 'Heavy Class' );
+}
 
-//function serverCmdGetArmorClassList( %client, %key )
-//{
-//   if ( isObject( Game ) )
-//      Game.sendArmorClassList( %client, %key );
-//}
+function serverCmdGetArmorClassList( %client, %key )
+{
+   if ( isObject( Game ) )
+      Game.sendArmorClassList( %client, %key );
+}
 
 function SCtFGame::evalVote(%game, %typeName, %admin, %arg1, %arg2, %arg3, %arg4)
 {
+   DefaultGame::evalVote(%game, %typeName, %admin, %arg1, %arg2, %arg3, %arg4);
    switch$ (%typeName)
    {
-	  //case "voteAntiTurtleTime":
-         //%game.voteAntiTurtleTime(%admin, %arg1, %arg2, %arg3, %arg4);
-      //case "VoteArmorClass":
-         //%game.VoteArmorClass(%admin, %arg1, %arg2, %arg3, %arg4);
-	  case "SCtFProMode":
-         %game.SCtFProMode(%admin, %arg1, %arg2, %arg3, %arg4);
+      case "voteAntiTurtleTime":
+         %game.voteAntiTurtleTime(%admin, %arg1, %arg2, %arg3, %arg4);
+
+      case "VoteArmorClass":
+         %game.VoteArmorClass(%admin, %arg1, %arg2, %arg3, %arg4);
    }
-
-   	parent::evalVote(%game, %typeName, %admin, %arg1, %arg2, %arg3, %arg4);
 }
 
-//function SCtFGame::voteAntiTurtleTime(%game, %admin, %newLimit)
-//{
-//   if( %newLimit == 200 )
-//      %display = "disabled";
-//   else
-//      %display = %newLimit;
-//
-//   %cause = "";
-//   if ( %admin )
-//   {
-//      messageAll('MsgAdminForce', '\c3%1\c2 set the anti-turtle time to %2.~wfx/misc/diagnostic_on.wav', $AdminCl.name, %display);
-//      $Host::ClassicAntiTurtleTime = %newLimit;
-//      %cause = "(admin)";
-//   }
-//   else
-//   {
-//      %totalVotes = %game.totalVotesFor + %game.totalVotesAgainst;
-//      if(%totalVotes > 0 && (%game.totalVotesFor / (ClientGroup.getCount() - $HostGameBotCount)) > ($Host::VotePasspercent / 100))
-//      {
-//         messageAll('MsgVotePassed', '\c2The anti-turtle time is set to %1.', %display);
-//         $Host::ClassicAntiTurtleTime = %newLimit;
-//         %cause = "(vote)";
-//      }
-//      else
-//         messageAll('MsgVoteFailed', '\c2The vote to change the anti-turtle time did not pass: %1 percent.', mFloor(%game.totalVotesFor/(ClientGroup.getCount() - $HostGameBotCount) * 100));
-//   }
-//   if(%cause !$= "")
-//      logEcho($AdminCl.name @ ": anti-turtle time set to "@%display SPC %cause, 1);
-//}
+// function SCtFGame::voteAntiTurtleTime(%game, %admin, %newLimit)
+// {
+//    if( %newLimit == 200 )
+//       %display = "disabled";
+//    else
+//       %display = %newLimit;
 
-//function SCtFGame::VoteArmorClass(%game, %admin, %newLimit)
-//{
-//   %cause = "";
-//   if ( %admin )
-//   {
-//      messageAll('MsgAdminForce', '\c3%1\c2 set the armor class to %2.~wfx/misc/diagnostic_on.wav', $AdminCl.name, %newLimit);
-//      $Sctf::Armor = %newLimit;
-//      %cause = "(admin)";
-//   }
-//   else
-//   {
-//      %totalVotes = %game.totalVotesFor + %game.totalVotesAgainst;
-//      if(%totalVotes > 0 && (%game.totalVotesFor / (ClientGroup.getCount() - $HostGameBotCount)) > ($Host::VotePasspercent / 100))
-//      {
-//         messageAll('MsgVotePassed', '\c2The armor class was set to %1.', %newLimit);
-//         $Sctf::Armor = %newLimit;
-//         %cause = "(vote)";
-//      }
-//      else
-//         messageAll('MsgVoteFailed', '\c2The vote to change the armor class did not pass: %1 percent.', mFloor(%game.totalVotesFor/(ClientGroup.getCount() - $HostGameBotCount) * 100));
-//   }
-//   switch$ ( %newLimit )
-//   {
-//      case "Light":
-//         setArmorDefaults(%newLimit);
-//
-//      case "Medium":
-//         setArmorDefaults(%newLimit);
-//
-//      case "Heavy":
-//         setArmorDefaults(%newLimit);
-//   }
-//   if(%cause !$= "")
-//      logEcho($AdminCl.name @ ": armor class set to "@%display SPC %cause, 1);
-//}
+//    %cause = "";
+//    if ( %admin )
+//    {
+//       messageAll('MsgAdminForce', '\c3%1\c2 set the anti-turtle time to %2.~wfx/misc/diagnostic_on.wav', $AdminCl.name, %display);
+//       $Host::ClassicAntiTurtleTime = %newLimit;
+//       %cause = "(admin)";
+//    }
+//    else
+//    {
+//       %totalVotes = %game.totalVotesFor + %game.totalVotesAgainst;
+//       if(%totalVotes > 0 && (%game.totalVotesFor / (ClientGroup.getCount() - $HostGameBotCount)) > ($Host::VotePasspercent / 100))
+//       {
+//          messageAll('MsgVotePassed', '\c2The anti-turtle time is set to %1.', %display);
+//          $Host::ClassicAntiTurtleTime = %newLimit;
+//          %cause = "(vote)";
+//       }
+//       else
+//          messageAll('MsgVoteFailed', '\c2The vote to change the anti-turtle time did not pass: %1 percent.', mFloor(%game.totalVotesFor/(ClientGroup.getCount() - $HostGameBotCount) * 100));
+//    }
+//    if(%cause !$= "")
+//       logEcho($AdminCl.name @ ": anti-turtle time set to "@%display SPC %cause, 1);
+// }
 
-//function serverCmdArmorDefaults(%client, %armor)
-//{
-//   if(%client.isAdmin)
-//   {
-//      Game.VoteArmorClass(true, %armor);
-//   }
-//}
-
-
-//--------------------------------SCTFProMode--------------------------------
-//
-$VoteMessage["SCtFProMode"] = "turn";
-
-$InvBanList[SCtF, "Chaingun"] = $Host::SCtFProMode;
-$InvBanList[SCtF, "ShockLance"] = $Host::SCtFProMode;
-$InvBanList[SCtF, "Plasma"] = $Host::SCtFProMode;
-
-function SCtFGame::SCtFProMode(%game, %admin, %arg1, %arg2, %arg3, %arg4)
+function SCtFGame::VoteArmorClass(%game, %admin, %newLimit)
 {
-	if(	$countdownStarted && $MatchStarted )
-	{
-		if(%admin)
-		{
-			killeveryone();
-
-			if($Host::SCtFProMode)
-			{
-				messageAll('MsgAdminForce', '\c2The Admin has disabled Pro Mode.');
-
-				$InvBanList[SCtF, "Chaingun"] = 0;
-				$InvBanList[SCtF, "ShockLance"] = 0;
-				$InvBanList[SCtF, "Plasma"] = 0;
-
-				$Host::SCtFProMode = false;
-			}
-			else
-			{
-				messageAll('MsgAdminForce', '\c2The Admin has enabled Pro Mode.');
-
-				$InvBanList[SCtF, "Chaingun"] = 1;
-				$InvBanList[SCtF, "ShockLance"] = 1;
-				$InvBanList[SCtF, "Plasma"] = 1;
-
-				$Host::SCtFProMode = true;
-			}
-		}
-		else
-		{
-			%totalVotes = %game.totalVotesFor + %game.totalVotesAgainst;
-			if(%totalVotes > 0 && (%game.totalVotesFor / ClientGroup.getCount()) > ($Host::VotePasspercent / 100))
-			{
-				killeveryone();
-
-				if($Host::SCtFProMode)
-				{
-					messageAll('MsgVotePassed', '\c2Pro Mode Disabled.');
-
-					$InvBanList[SCtF, "Chaingun"] = 0;
-					$InvBanList[SCtF, "ShockLance"] = 0;
-					$InvBanList[SCtF, "Plasma"] = 0;
-
-					$Host::SCtFProMode = false;
-				}
-				else
-				{
-					messageAll('MsgVotePassed', '\c2Pro Mode Enabled.');
-
-					$InvBanList[SCtF, "Chaingun"] = 1;
-					$InvBanList[SCtF, "ShockLance"] = 1;
-					$InvBanList[SCtF, "Plasma"] = 1;
-
-					$Host::SCtFProMode = true;
-				}
-			}
-			else
-				messageAll('MsgVoteFailed', '\c2Mode change did not pass: %1 percent.', mFloor(%game.totalVotesFor/ClientGroup.getCount() * 100));
-		}
-	}
-}
-// For voting to work properly - evo admin.ovl
-//
-//	  case "SCtFProMode":
-//         if( %isAdmin && !%client.ForceVote )
-//         {
-//            adminStartNewVote(%client, %typename, %arg1, %arg2, %arg3, %arg4);
-//			adminLog(%client, " has toggled " @ %arg1 @ " (" @ %arg2 @ ")");
-//         }
-//         else
-//         {
-//            if(Game.scheduleVote !$= "")
-//            {
-//               messageClient(%client, 'voteAlreadyRunning', '\c2A vote is already in progress.');
-//               return;
-//            }
-//			%actionMsg = ($Host::SCtFProMode ? "disable Pro mode" : "enable Pro mode");
-//            for(%idx = 0; %idx < ClientGroup.getCount(); %idx++)
-//            {
-//               %cl = ClientGroup.getObject(%idx);
-//               if(!%cl.isAIControlled())
-//               {
-//                  messageClient(%cl, 'VoteStarted', '\c2%1 initiated a vote to %2.', %client.name, %actionMsg);
-//                  %clientsVoting++;
-//               }
-//            }
-//            playerStartNewVote(%client, %typename, %arg1, %arg2, %arg3, %arg4, %clientsVoting);
-//         }
-
-//AutoRemove assets, sensors, and turrets from non-LT maps
-function deleteNonSCtFObjects()
-{
-   %c = 0;
-   InitContainerRadiusSearch("0 0 0", 9999, $TypeMasks::ItemObjectType |
-   $TypeMasks::TurretObjectType | $TypeMasks::VehicleObjectType | $TypeMasks::StaticShapeObjectType); //For FF: $TypeMasks::ForceFieldObjectType
-   while ((%obj = containerSearchNext()) != 0)
+   %cause = "";
+   if ( %admin )
    {
-      if(%obj.Datablock !$= "flag" && %obj.Datablock !$= "RepairKit" && %obj.Datablock !$= "RepairPatch" && %obj.Datablock !$= "ExteriorFlagStand" && %obj.Datablock !$= "InteriorFlagStand" && %obj.Datablock !$= "NexusBase") //Dont delete these...
+      messageAll('MsgAdminForce', '\c3%1\c2 set the armor class to %2.~wfx/misc/diagnostic_on.wav', $AdminCl.name, %newLimit);
+      $Sctf::Armor = %newLimit;
+      %cause = "(admin)";
+   }
+   else
+   {
+      %totalVotes = %game.totalVotesFor + %game.totalVotesAgainst;
+      if(%totalVotes > 0 && (%game.totalVotesFor / (ClientGroup.getCount() - $HostGameBotCount)) > ($Host::VotePasspercent / 100))
       {
-         %deleteList[%c] = %obj;
-         %c++;
+         messageAll('MsgVotePassed', '\c2The armor class was set to %1.', %newLimit);
+         $Sctf::Armor = %newLimit;
+         %cause = "(vote)";
       }
-
+      else
+         messageAll('MsgVoteFailed', '\c2The vote to change the armor class did not pass: %1 percent.', mFloor(%game.totalVotesFor/(ClientGroup.getCount() - $HostGameBotCount) * 100));
    }
-   for(%i = 0; %i  < %c; %i++)
+   switch$ ( %newLimit )
    {
-       %deleteList[%i].delete();
-   }
+      case "Light":
+         setArmorDefaults(%newLimit);
 
-   //Delete all ForceField PhysicalZones (PZones)
-   // if(isObject(PZones))
-   //    PZones.schedule(1500,"delete");
+      case "Medium":
+         setArmorDefaults(%newLimit);
+
+      case "Heavy":
+         setArmorDefaults(%newLimit);
+   }
+   if(%cause !$= "")
+      logEcho($AdminCl.name @ ": armor class set to "@%display SPC %cause, 1);
+}
+
+function serverCmdArmorDefaults(%client, %armor)
+{
+   if(%client.isAdmin)
+   {
+      Game.VoteArmorClass(true, %armor);
+   }
 }
