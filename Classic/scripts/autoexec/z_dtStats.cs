@@ -14,28 +14,29 @@
 // Note See bottom of file for full log
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //-----------Settings-----------
-$dtStats::version = 10.2;
+$dtStats::version = 10.3;
 //disable stats system
-$dtStats::Enable = 1;
+$dtStats::Enable = $Host::dtStatsEnable $= "" ? ($Host::dtStatsEnable = 1) : $Host::dtStatsEnable;
 //set max number of individual game to record
 //Note only tested to 100 games, hard cap at 300
 $dtStats::MaxNumOfGames = 100;
 
 //how high the player has to be off the ground before it will count
 $dtStats::midAirHeight = 10;
+
 //only enable if evo system is not available
-$dtStats::midAirMessage = 1;
+$dtStats::midAirMessage =  $Host::dtStatsMidAirMessage $= "" ? ($Host::dtStatsMidAirMessage = 1) : $Host::dtStatsMidAirMessage;
 
 //capture best cap times restart required if changed
 //only enable if evo system is not available
-$dtStats::ctfTimes = 1;
+$dtStats::ctfTimes =  $Host::dtStatsCTFTimes $= "" ? ($Host::dtStatsCTFTimes = 1) : $Host::dtStatsCTFTimes;
 //number of players before it starts counting captimes
-$dtStats::ctfTimesPlayerLimit = 8;// 4v4 start trying to capture best times
+$dtStats::ctfTimesPlayerLimit =  $Host::dtStatsCTFTimesPlayerLimit $= "" ? ($Host::dtStatsCTFTimesPlayerLimit = 8) : $Host::dtStatsCTFTimesPlayerLimit;
 
 //converts the debrief into easer to read teams for ctf and lctf
-$dtStats::teamDebrief = 1;
+$dtStats::teamDebrief = $Host::dtStatsTeamDebrief $= "" ? ($Host::dtStatsTeamDebrief = 1) : $Host::dtStatsTeamDebrief;
 //extends the debrief with extra stats done in the evo style
-$dtStats::evoStyleDebrief = 1;
+$dtStats::evoStyleDebrief = $Host::dtStatsEvoStyleDebrief $= "" ? ($Host::dtStatsEvoStyleDebrief = 1) : $Host::dtStatsEvoStyleDebrief ;
 
 // 30 sec min after not making an action reset
 $dtStats::returnToMenuTimer = (60*1000);
@@ -60,15 +61,15 @@ $dtStats::sortSpeed = 64;
 
 //To rebuild the leaderboards manually type lStatsCycle(1) into the console;
 //This time marks the end of day and to rebuild the leaderboards, best set this time when the server is normally empty or low numbers
-$dtStats::buildSetTime = "5\t00\tam";
+$dtStats::buildSetTime = $Host::dtStatsBuildSetTime $= "" ? ($Host::dtStatsBuildSetTime = "5\t00\tam") : $Host::dtStatsBuildSetTime;
 
 // top 15 players per cat, best not to change
 $dtStats::topAmount = 15;
 
 $dtStats::joinHist = 144;//51 per page
-$dtStats::BanListFile = "prefs/dtBanlist.cs";// note old version not compatable
-$dtStats::IPBanListFile = "prefs/ipList.txt";
-$dtStats::WhtListFile = "prefs/whtList.cs";
+$dtStats::BanListFile = $Host::dtStatsBanListFile $= "" ? ($Host::dtStatsBanListFile = "prefs/dtBanlist.cs") : $Host::dtStatsBanListFile;
+$dtStats::IPBanListFile = $Host::dtStatsIPBanListFile $= "" ? ($Host::dtStatsIPBanListFile = "prefs/ipList.txt") : $Host::dtStatsIPBanListFile;
+$dtStats::WhtListFile = $Host::dtStatsWhtListFile $= "" ? ($Host::dtStatsWhtListFile = "prefs/whtList.cs") : $Host::dtStatsWhtListFile;
 
 
 
@@ -87,6 +88,7 @@ $dtStats::expireMin = 15;
 $dtStats::expireFactor["CTFGame"] = 0.596;
 $dtStats::expireFactor["LakRabbitGame"] = 2;
 $dtStats::expireFactor["DMGame"] = 6;
+$dtStats::expireFactor["LCTFGame"] = 1.2;
 $dtStats::expireFactor["SCtFGame"] = 1.2;
 $dtStats::expireFactor["ArenaGame"] = 2;
 $dtStats::expireFactor["SiegeGame"] = 10;
@@ -150,23 +152,26 @@ $pref::NoClearConsole = 1;
 $dtStats::gameType[0] = "CTFGame";
 $dtStats::gameType[1] = "LakRabbitGame";
 $dtStats::gameType[2] = "DMGame";
-$dtStats::gameType[3] = "SCtFGame";
+$dtStats::gameType[3] = "LCTFGame";
 $dtStats::gameType[4] = "ArenaGame";
+$dtStats::gameType[5] = "SCtFGame";
 //$dtStats::gameType[5] = "SiegeGame";
 $dtStats::gameTypeCount = 5;
 //short hand name
 $dtStats::gtNameShort["CTFGame"] = "CTF";
 $dtStats::gtNameShort["LakRabbitGame"] = "LakRabbit";
 $dtStats::gtNameShort["DMGame"] = "DM";
-$dtStats::gtNameShort["SCtFGame"] = "LCTF";
+$dtStats::gtNameShort["LCTFGame"] = "LCTF";
 $dtStats::gtNameShort["ArenaGame"] = "Arena";
+$dtStats::gtNameShort["SCtFGame"] = "LCTF";
 //$dtStats::gtNameShort["SiegeGame"] = "Siege";
 //Display name
 $dtStats::gtNameLong["CTFGame"] = "Capture the Flag";
 $dtStats::gtNameLong["LakRabbitGame"] = "LakRabbit";
 $dtStats::gtNameLong["DMGame"] = "Deathmatch";
-$dtStats::gtNameLong["SCtFGame"] = "Spawn CTF";
+$dtStats::gtNameLong["LCTFGame"] = "Light CTF";
 $dtStats::gtNameLong["ArenaGame"] = "Arena";
+$dtStats::gtNameLong["SCtFGame"] = "Light CTF";
 //$dtStats::gtNameLong["SiegeGame"] = "Siege";
 
 //varTypes
@@ -337,6 +342,100 @@ $dtStats::FV[$dtStats::FC["CTFGame","TG"]++,"CTFGame","TG"] = "flagTimeMin";
 ///////////////////////////////////////////////////////////////////////////////
 //                             		LCTF
 ///////////////////////////////////////////////////////////////////////////////
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "score";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","Avg"]++,"LCTFGame","Avg"] = "score";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","Max"]++,"LCTFGame","Max"] = "score";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "kills";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "deaths";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "suicides";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "teamKills";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "flagCaps";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "flagGrabs";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "carrierKills";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "flagReturns";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "scoreMidAir";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "scoreHeadshot";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "scoreRearshot";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "escortAssists";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "defenseScore";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "offenseScore";
+$dtStats::FVG[$dtStats::FCG["LCTFGame","TG"]++,"LCTFGame","TG"] = "flagDefends";
+// in this script only
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "winCount";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "lossCount";
+$dtStats::FV[$dtStats::FC["LCTFGame","Min"]++,"LCTFGame","Min"] = "heldTimeSec";
+$dtStats::FV[$dtStats::FC["LCTFGame","AvgI"]++,"LCTFGame","AvgI"] = "heldTimeSec";
+$dtStats::FV[$dtStats::FC["LCTFGame","Max"]++,"LCTFGame","Max"] = "grabSpeed";
+$dtStats::FV[$dtStats::FC["LCTFGame","Avg"]++,"LCTFGame","Avg"] = "grabSpeed";
+$dtStats::FV[$dtStats::FC["LCTFGame","Avg"]++,"LCTFGame","Avg"] = "capEfficiency";
+$dtStats::FV[$dtStats::FC["LCTFGame","Avg"]++,"LCTFGame","Avg"] = "winLostPct";
+$dtStats::FV[$dtStats::FC["LCTFGame","Game"]++,"LCTFGame","Game"] = "dtTeam";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "destruction";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "repairs";
+$dtStats::FV[$dtStats::FC["LCTFGame","Game"]++,"LCTFGame","Game"] = "teamScore";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "concussFlag";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "flagCatch";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "maFlagCatch";
+$dtStats::FV[$dtStats::FC["LCTFGame","Max"]++,"LCTFGame","Max"] = "flagCatchSpeed";
+$dtStats::FV[$dtStats::FC["LCTFGame","Max"]++,"LCTFGame","Max"] = "maFlagCatchSpeed";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "flagToss";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "flagTossCatch";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "interceptedFlag";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "maInterceptedFlag";
+$dtStats::FV[$dtStats::FC["LCTFGame","Max"]++,"LCTFGame","Max"] = "interceptSpeed";
+$dtStats::FV[$dtStats::FC["LCTFGame","Max"]++,"LCTFGame","Max"] = "interceptFlagSpeed";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "friendlyFire";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "stalemateReturn";
+////////////////////////////Unused LCTF Vars/////////////////////////////////////
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "tkDestroys";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "genDestroys";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "sensorDestroys";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "turretDestroys";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "iStationDestroys";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "vstationDestroys";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "mpbtstationDestroys";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "solarDestroys";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "sentryDestroys";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "depSensorDestroys";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "depTurretDestroys";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "depStationDestroys";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "vehicleScore";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "vehicleBonus";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "genDefends";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "escortAssists";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "turretKills";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "mannedTurretKills";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "genRepairs";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "SensorRepairs";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "TurretRepairs";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "StationRepairs";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "VStationRepairs";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "mpbtstationRepairs";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "solarRepairs";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "sentryRepairs";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "depSensorRepairs";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "depInvRepairs";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "depTurretRepairs";
+$dtStats::uGFV[$dtStats::uGFC["LCTFGame"]++,"LCTFGame"] = "returnPts";
+
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "timeOnTeamZero";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "timeOnTeamOne";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "timeOnTeamTwo";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "matchRunTime";
+$dtStats::FV[$dtStats::FC["LCTFGame","Game"]++,"LCTFGame","Game"] = "teamOneCapTimes";
+$dtStats::FV[$dtStats::FC["LCTFGame","Game"]++,"LCTFGame","Game"] = "teamTwoCapTimes";
+
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "OffKills";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "DefKills";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "timeNearTeamFS";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "timeFarTeamFS";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "timeNearEnemyFS";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "timeFarEnemyFS";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "timeNearFlag";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "timeNearEnemyFlag";
+$dtStats::FV[$dtStats::FC["LCTFGame","TG"]++,"LCTFGame","TG"] = "flagTimeMin";
+
+//////////////////////////////////////////////////////////////////////////////////
 $dtStats::FVG[$dtStats::FCG["SCtFGame","TG"]++,"SCtFGame","TG"] = "score";
 $dtStats::FVG[$dtStats::FCG["SCtFGame","Avg"]++,"SCtFGame","Avg"] = "score";
 $dtStats::FVG[$dtStats::FCG["SCtFGame","Max"]++,"SCtFGame","Max"] = "score";
@@ -429,7 +528,6 @@ $dtStats::FV[$dtStats::FC["SCtFGame","TG"]++,"SCtFGame","TG"] = "timeFarEnemyFS"
 $dtStats::FV[$dtStats::FC["SCtFGame","TG"]++,"SCtFGame","TG"] = "timeNearFlag";
 $dtStats::FV[$dtStats::FC["SCtFGame","TG"]++,"SCtFGame","TG"] = "timeNearEnemyFlag";
 $dtStats::FV[$dtStats::FC["SCtFGame","TG"]++,"SCtFGame","TG"] = "flagTimeMin";
-
 ///////////////////////////////////////////////////////////////////////////////
 //                            	 LakRabbit
 ///////////////////////////////////////////////////////////////////////////////
@@ -1466,6 +1564,54 @@ $panelCount++;
 
 
 $panelCount = 0;
+$upperWepPanel[$panelCount,"LCTFGame"] = "blasterShotsFiredTG";    $upperWepPanel[$panelCount++,"LCTFGame"] = "blasterDeathsTG";      $upperWepPanel[$panelCount++,"LCTFGame"] = "plasmaShotsFiredTG";
+$upperWepPanel[$panelCount++,"LCTFGame"] = "plasmaDeathsTG";       $upperWepPanel[$panelCount++,"LCTFGame"] = "discShotsFiredTG";     $upperWepPanel[$panelCount++,"LCTFGame"] = "discDeathsTG";
+$upperWepPanel[$panelCount++,"LCTFGame"] = "grenadeShotsFiredTG";  $upperWepPanel[$panelCount++,"LCTFGame"] = "grenadeDeathsTG";      $upperWepPanel[$panelCount++,"LCTFGame"] = "cgShotsFiredTG";
+$upperWepPanel[$panelCount++,"LCTFGame"] = "cgDeathsTG";           $upperWepPanel[$panelCount++,"LCTFGame"] = "shockShotsFiredTG";    $upperWepPanel[$panelCount++,"LCTFGame"] = "shockDeathsTG";
+$upperWepPanel[$panelCount++,"LCTFGame"] = "mineShotsFiredTG";     $upperWepPanel[$panelCount++,"LCTFGame"] = "mineDeathsTG";         $upperWepPanel[$panelCount++,"LCTFGame"] = "hGrenadeShotsFiredTG";
+$upperWepPanel[$panelCount++,"LCTFGame"] = "hGrenadeDeathsTG";     $upperWepPanel[$panelCount++,"LCTFGame"] = "doubleChainKillTG";    $upperWepPanel[$panelCount++,"LCTFGame"] = "tripleChainKillTG";
+$upperWepPanel[$panelCount++,"LCTFGame"] = "quadrupleChainKillTG"; $upperWepPanel[$panelCount++,"LCTFGame"] = "quintupleChainKillTG"; $upperWepPanel[$panelCount++,"LCTFGame"] = "sextupleChainKillTG";
+$upperWepPanel[$panelCount++,"LCTFGame"] = "septupleChainKillTG";  $upperWepPanel[$panelCount++,"LCTFGame"] = "octupleChainKillTG";   $upperWepPanel[$panelCount++,"LCTFGame"] = "nonupleChainKillTG";
+$panelCount++;
+
+$panelCount = 0;
+$wepGrid[$panelCount, "LCTFGame"] = "blasterKillsTG";     $wepGrid[$panelCount++, "LCTFGame"] = "blasterMATG";  $wepGrid[$panelCount++, "LCTFGame"] = "blasterHitDistMax";   $wepGrid[$panelCount++, "LCTFGame"] = "blasterDmgTG";
+$wepGrid[$panelCount++, "LCTFGame"] = "plasmaKillsTG";    $wepGrid[$panelCount++, "LCTFGame"] = "plasmaMATG";    $wepGrid[$panelCount++, "LCTFGame"] = "plasmaHitDistMax";    $wepGrid[$panelCount++, "LCTFGame"] = "plasmaDmgTG";
+$wepGrid[$panelCount++, "LCTFGame"] = "cgKillsTG";        $wepGrid[$panelCount++, "LCTFGame"] = "cgMATG";        $wepGrid[$panelCount++, "LCTFGame"] = "cgHitDistMax";        $wepGrid[$panelCount++, "LCTFGame"] = "cgDmgTG";
+$wepGrid[$panelCount++, "LCTFGame"] = "discKillsTG";      $wepGrid[$panelCount++, "LCTFGame"] = "discMATG";      $wepGrid[$panelCount++, "LCTFGame"] = "discHitDistMax";      $wepGrid[$panelCount++, "LCTFGame"] = "discDmgTG";
+$wepGrid[$panelCount++, "LCTFGame"] = "grenadeKillsTG";   $wepGrid[$panelCount++, "LCTFGame"] = "grenadeMATG";   $wepGrid[$panelCount++, "LCTFGame"] = "grenadeHitDistMax";   $wepGrid[$panelCount++, "LCTFGame"] = "grenadeDmgTG";
+$wepGrid[$panelCount++, "LCTFGame"] = "shockKillsTG";     $wepGrid[$panelCount++, "LCTFGame"] = "shockMATG";     $wepGrid[$panelCount++, "LCTFGame"] = "shockHitDistMax";     $wepGrid[$panelCount++, "LCTFGame"] = "shockDmgTG";
+$wepGrid[$panelCount++, "LCTFGame"] = "mineKillsTG";      $wepGrid[$panelCount++, "LCTFGame"] = "mineMATG";      $wepGrid[$panelCount++, "LCTFGame"] = "mineHitDistMax";      $wepGrid[$panelCount++, "LCTFGame"] = "mineDmgTG";
+$wepGrid[$panelCount++, "LCTFGame"] = "hGrenadeKillsTG";  $wepGrid[$panelCount++, "LCTFGame"] = "hGrenadeMATG";   $wepGrid[$panelCount++, "LCTFGame"] = "hGrenadeHitDistMax";  $wepGrid[$panelCount++, "LCTFGame"] = "hGrenadeDmgTG";
+$panelCount++;
+
+$panelCount = 0;
+$panelThree[$panelCount,"LCTFGame"] = "winLostPctAvg";        $panelThree[$panelCount++,"LCTFGame"] = "scoreAvg";        $panelThree[$panelCount++,"LCTFGame"] = "scoreMax";              $panelThree[$panelCount++,"LCTFGame"] = "capEfficiencyAvg";
+$panelThree[$panelCount++,"LCTFGame"] = "assistTG";           $panelThree[$panelCount++,"LCTFGame"] = "voteCountTG";     $panelThree[$panelCount++,"LCTFGame"] = "teamkillCountTG";      $panelThree[$panelCount++,"LCTFGame"] = "killStreakMax";
+$panelThree[$panelCount++,"LCTFGame"] = "kdrAvg";             $panelThree[$panelCount++,"LCTFGame"] = "totalWepDmgTG";   $panelThree[$panelCount++,"LCTFGame"] = "blasterReflectKillTG";  $panelThree[$panelCount++,"LCTFGame"] = "distMovTG";
+$panelThree[$panelCount++,"LCTFGame"] = "blasterKillsTG";     $panelThree[$panelCount++,"LCTFGame"] = "timeTLAvg";       $panelThree[$panelCount++,"LCTFGame"] = "maxSpeedMax";           $panelThree[$panelCount++,"LCTFGame"] = "lagSpikesTG";
+$panelThree[$panelCount++,"LCTFGame"] = "switchteamCountTG";  $panelThree[$panelCount++,"LCTFGame"] = "discJumpTG";      $panelThree[$panelCount++,"LCTFGame"] = "EVKillsTG";             $panelThree[$panelCount++,"LCTFGame"] = "idleTimeTG";
+$panelThree[$panelCount++,"LCTFGame"] = "lightningKillsTG";   $panelThree[$panelCount++,"LCTFGame"] = "airTimeTG";       $panelThree[$panelCount++,"LCTFGame"] = "groundTimeTG";          $panelThree[$panelCount++,"LCTFGame"] = "distMovTG";
+$panelThree[$panelCount++,"LCTFGame"] = "totalMATG";          $panelThree[$panelCount++,"LCTFGame"] = "shotsFiredTG";    $panelThree[$panelCount++,"LCTFGame"] = "shockRearShotTG";       $panelThree[$panelCount++,"LCTFGame"] = "discReflectKillTG";
+$panelThree[$panelCount++,"LCTFGame"] = "ctrlKKillsTG";       $panelThree[$panelCount++,"LCTFGame"] = "deathKillsTG";    $panelThree[$panelCount++,"LCTFGame"] = "multiKillTG";           $panelThree[$panelCount++,"LCTFGame"] = "doubleKillTG";
+$panelThree[$panelCount++,"LCTFGame"] = "tripleKillTG";       $panelThree[$panelCount++,"LCTFGame"] = "flagTimeMinTG";   $panelThree[$panelCount++,"LCTFGame"] = "OffKillsTG";       $panelThree[$panelCount++,"LCTFGame"] = "DefKillsTG";
+$panelThree[$panelCount++,"LCTFGame"] = "maHitDistMax";       $panelThree[$panelCount++,"LCTFGame"] = "groundDeathsTG";  $panelThree[$panelCount++,"LCTFGame"] = "deadDistMax";           $panelThree[$panelCount++,"LCTFGame"] = "minePlusDiscTG";
+$panelThree[$panelCount++,"LCTFGame"] = "minePlusDiscKillTG"; $panelThree[$panelCount++,"LCTFGame"] = "maHitHeightMax";  $panelThree[$panelCount++,"LCTFGame"] = "discReflectHitTG";      $panelThree[$panelCount++,"LCTFGame"] = "discReflectKillTG";
+$panelThree[$panelCount++,"LCTFGame"] = "killerDiscJumpTG";   $panelThree[$panelCount++,"LCTFGame"] = "firstKillTG";     $panelThree[$panelCount++,"LCTFGame"] = "lastKillTG";            $panelThree[$panelCount++,"LCTFGame"] = "deathKillsTG";
+$panelCount++;
+
+$panelCount = 0;
+$smallPanel[$panelCount,"LCTFGame"] = "offenseScoreTG";   $smallPanel[$panelCount++,"LCTFGame"] = "defenseScoreTG"; $smallPanel[$panelCount++,"LCTFGame"] = "flagCapsTG";        $smallPanel[$panelCount++,"LCTFGame"] = "flagGrabsTG";
+$smallPanel[$panelCount++,"LCTFGame"] = "flagReturnsTG";  $smallPanel[$panelCount++,"LCTFGame"] = "carrierKillsTG"; $smallPanel[$panelCount++,"LCTFGame"] = "escortAssistsTG";   $smallPanel[$panelCount++,"LCTFGame"] = "flagDefendsTG";
+$smallPanel[$panelCount++,"LCTFGame"] = "grabSpeedAvg";   $smallPanel[$panelCount++,"LCTFGame"] = "concussHitTG";   $smallPanel[$panelCount++,"LCTFGame"] = "flagTossTG";        $smallPanel[$panelCount++,"LCTFGame"] = "flagCatchTG";
+$smallPanel[$panelCount++,"LCTFGame"] = "maFlagCatchTG";  $smallPanel[$panelCount++,"LCTFGame"] = "flagTossCatchTG";$smallPanel[$panelCount++,"LCTFGame"] = "interceptedFlagTG"; $smallPanel[$panelCount++,"LCTFGame"] = "maInterceptedFlagTG";
+$smallPanel[$panelCount++,"LCTFGame"] = "totalTimeTG";    $smallPanel[$panelCount++,"LCTFGame"] = "plasmaKillsTG";  $smallPanel[$panelCount++,"LCTFGame"] = "cgKillsTG";         $smallPanel[$panelCount++,"LCTFGame"] = "discKillsTG";
+$smallPanel[$panelCount++,"LCTFGame"] = "grenadeKillsTG"; $smallPanel[$panelCount++,"LCTFGame"] = "shockKillsTG";   $smallPanel[$panelCount++,"LCTFGame"] = "mineKillsTG";       $smallPanel[$panelCount++,"LCTFGame"] = "hGrenadeKillsTG";
+$panelCount++;
+
+
+
+$panelCount = 0;
 $upperWepPanel[$panelCount,"SCtFGame"] = "blasterShotsFiredTG";    $upperWepPanel[$panelCount++,"SCtFGame"] = "blasterDeathsTG";      $upperWepPanel[$panelCount++,"SCtFGame"] = "plasmaShotsFiredTG";
 $upperWepPanel[$panelCount++,"SCtFGame"] = "plasmaDeathsTG";       $upperWepPanel[$panelCount++,"SCtFGame"] = "discShotsFiredTG";     $upperWepPanel[$panelCount++,"SCtFGame"] = "discDeathsTG";
 $upperWepPanel[$panelCount++,"SCtFGame"] = "grenadeShotsFiredTG";  $upperWepPanel[$panelCount++,"SCtFGame"] = "grenadeDeathsTG";      $upperWepPanel[$panelCount++,"SCtFGame"] = "cgShotsFiredTG";
@@ -2054,6 +2200,54 @@ package dtStats{
          parent::updateScoreHud(%game, %client, %tag);
    }
    ////////////////////////////////////////////////////////////////////////////////
+   function LCTFGame::clientMissionDropReady(%game, %client){
+      parent::clientMissionDropReady(%game, %client);
+      if($dtStats::ctfTimes){
+         %team1 = $dtServer::capTimes[cleanMapName($missionName),%game.class,1];
+         %team2 = $dtServer::capTimes[cleanMapName($missionName),%game.class,1];
+         %time1 = %game.formatTime(getField(%team1,0), true);
+         %time2 = %game.formatTime(getField(%team2,0), true);
+         %name1 = getField(%team1,1);
+         %name2 = getField(%team1,2);
+         BottomPrint(%client, "Best caps on " @ $CurrentMission @ ":\n" @ getTaggedString(%game.getTeamName(1)) @ ":" SPC %name1 @ " in " @ %time1 @ " seconds\n" @ getTaggedString(%game.getTeamName(2)) @ ":" SPC %name2 @ " in " @ %time2  @ " seconds", 20, 3);
+      }
+      dtStatsMissionDropReady(%game, %client);//common
+   }
+   function LCTFGame::gameOver( %game ){
+      dtStatsGameOver(%game);//common
+      parent::gameOver(%game);
+
+      if(isObject(dtGameStat)){
+         dtGameStat.delete();
+      }
+   }
+   function LCTFGame::onClientKilled(%game, %clVictim, %clKiller, %damageType, %implement, %damageLocation){
+      clientKillStats(%game,%clVictim, %clKiller, %damageType, %implement, %damageLocation);//for stats collection
+      if(%clKiller.team != %clVictim.team){
+         %dist = vectorDist($dtStats::FlagPos[%clKiller.team], %clKiller.player.getPosition());
+         if(%dist > ($dtStats::FlagTotalDist*0.5)){// kill made closer to the enemy flag
+            %clKiller.dtStats.stat["OffKills"]++;
+         }
+         else{
+            %clKiller.dtStats.stat["DefKills"]++;
+         }
+      }
+      parent::onClientKilled(%game, %clVictim, %clKiller, %damageType, %implement, %damageLocation);
+   }
+
+   function LCTFGame::processGameLink(%game, %client, %arg1, %arg2, %arg3, %arg4, %arg5){
+      if($dtStats::Enable || %client.isSuperAdmin)
+         dtGameLink(%game, %client, %arg1, %arg2, %arg3, %arg4, %arg5);
+      else
+         parent::processGameLink(%game, %client, %arg1, %arg2, %arg3, %arg4, %arg5);
+   }
+   function LCTFGame::updateScoreHud(%game, %client, %tag){// defaultGame/evo
+      if($dtStats::Enable || %client.isSuperAdmin)
+         CTFHud(%game, %client, %tag);
+      else
+         parent::updateScoreHud(%game, %client, %tag);
+   }
+
    function SCtFGame::clientMissionDropReady(%game, %client){
       parent::clientMissionDropReady(%game, %client);
       if($dtStats::ctfTimes){
@@ -2110,7 +2304,7 @@ package dtStats{
 
       dtSaveServerVars();
       dtScanForRepair();
-      if(%game.class $= "CTFGame" || %game.class $= "SCtFGame"){
+      if(%game.class $= "CTFGame" || %game.class $= "LCTFGame" || %game.class $= "SCtFGame"){
          $dtStats::FlagPos[1] =  $TeamFlag[1].getPosition();
          $dtStats::FlagPos[2] =  $TeamFlag[2].getPosition();
          $dtStats::FlagTotalDist = vectorDist($dtStats::FlagPos[1], $dtStats::FlagPos[2]);
@@ -2162,6 +2356,10 @@ package dtStats{
    }
 
    function CTFGame::leaveMissionArea(%game, %playerData, %player){
+	   parent::leaveMissionArea(%game, %playerData, %player);
+      %player.client.dtStats.stat["leavemissionareaCount"]++;
+   }
+   function LCTFGame::leaveMissionArea(%game, %playerData, %player){
 	   parent::leaveMissionArea(%game, %playerData, %player);
       %player.client.dtStats.stat["leavemissionareaCount"]++;
    }
@@ -2284,7 +2482,19 @@ package dtStats{
 		  return true;
 	   return false;
 	}
-	function SCtFGame::onClientDamaged(%game, %clVictim, %clAttacker, %damageType, %implement, %damageLoc){
+	function LCTFGame::onClientDamaged(%game, %clVictim, %clAttacker, %damageType, %implement, %damageLoc){
+	   parent::onClientDamaged(%game, %clVictim, %clAttacker, %damageType, %implement, %damageLoc);
+	   %clAttacker.stat["scoreHeadshot"] = %clAttacker.scoreHeadshot;
+      %clAttacker.stat["scoreRearshot"] = %clAttacker.scoreRearshot;
+	   if ((%clVictim.player.holdingFlag !$= "") && (%clVictim.team != %clAttacker.team))
+		  %clAttacker.dmgdFlagTime = getSimTime();
+	}
+	function LCTFGame::testEscortAssist(%game, %victimID, %killerID){
+	   if((getSimTime() - %victimID.dmgdFlagTime) < 5000 && %killerID.player.holdingFlag $= "")
+		  return true;
+	   return false;
+	}
+   function SCtFGame::onClientDamaged(%game, %clVictim, %clAttacker, %damageType, %implement, %damageLoc){
 	   parent::onClientDamaged(%game, %clVictim, %clAttacker, %damageType, %implement, %damageLoc);
 	   %clAttacker.stat["scoreHeadshot"] = %clAttacker.scoreHeadshot;
       %clAttacker.stat["scoreRearshot"] = %clAttacker.scoreRearshot;
@@ -2296,7 +2506,6 @@ package dtStats{
 		  return true;
 	   return false;
 	}
-
    function ProjectileData::onExplode(%data, %proj, %pos, %mod){
       %dataName = %data.getName();
       %sourceClient = %proj.sourceObject.client;
@@ -2391,6 +2600,13 @@ package dtStats{
          %targetObject.concussBy = %sourceObject.client.dtStats;
       }
        parent::applyConcussion( %this, %dist, %radius, %sourceObject, %targetObject );
+   }
+   function LCTFGame::applyConcussion(%game, %player){
+      %dtStats = %player.concussBy;
+      if(isObject(%dtStats) &&  %player.holdingFlag > 0)
+         %dtStats.stat["concussFlag"]++;
+      %player.concussBy = -1;
+      parent::applyConcussion(%game, %player);
    }
    function SCtFGame::applyConcussion(%game, %player){
       %dtStats = %player.concussBy;
@@ -2632,6 +2848,61 @@ package dtStats{
 
    }
 
+   function LCTFGame::recalcScore(%game, %cl){
+      parent::recalcScore(%game, %cl);
+      %dtStats = %cl.dtStats;
+      %dtStats.stat["score"] = %cl.score;
+      %dtStats.stat["dtTeam"] = %cl.team;
+      %dtStats.stat["offenseScore"] = %cl.offenseScore;
+      %dtStats.stat["defenseScore"] = %cl.defenseScore;
+      %dtStats.stat["scoreMidAir"] = %cl.scoreMidAir;
+   }
+   function LCTFGame::awardScoreKill(%game, %killerID){
+      %val = parent::awardScoreKill(%game, %killerID);
+      %killerID.dtStats.stat["kills"] = %killerID.kills;
+      return %val;
+   }
+   function LCTFGame::awardScoreFlagCap(%game, %cl, %flag){
+      parent::awardScoreFlagCap(%game, %cl, %flag);
+      %cl.dtStats.stat["flagCaps"] = %cl.flagCaps;
+      dtMinMax("flagCaps", "flag", 1, %cl.dtStats.stat["flagCaps"], %cl);
+   }
+   function LCTFGame::awardScoreFlagTouch(%game, %cl, %flag){
+      parent::awardScoreFlagTouch(%game, %cl, %flag);
+      %cl.dtStats.stat["flagGrabs"] = %cl.flagGrabs;
+      dtMinMax("flagGrabs", "flag", 1, %cl.dtStats.stat["flagGrabs"], %cl);
+   }
+   function LCTFGame::awardScoreCarrierKill(%game, %killerID){
+      %val = parent::awardScoreCarrierKill(%game, %killerID);
+      %killerID.dtStats.stat["carrierKills"] = %killerID.carrierKills;
+      dtMinMax("carrierKills", "flag", 1, %killerID.dtStats.stat["carrierKills"], %killerID);
+      return %val;
+   }
+   function LCTFGame::awardScoreFlagReturn(%game, %cl, %perc){
+      %val = parent::awardScoreFlagReturn(%game, %cl, %perc);
+      %cl.dtStats.stat["flagReturns"] = %cl.flagReturns;
+      dtMinMax("flagReturns", "flag", 1, %cl.dtStats.stat["flagReturns"], %cl);
+      %cl.dtStats.stat["returnPts"] = %cl.returnPts;
+      return %val;
+   }
+   function LCTFGame::awardScoreEscortAssist(%game, %killerID){
+      %val = parent::awardScoreEscortAssist(%game, %killerID);
+      %killerID.dtStats.stat["escortAssists"] = %killerID.escortAssists;
+      dtMinMax("escortAssists", "flag", 1, %killerID.dtStats.stat["escortAssists"], %killerID);
+      return %val;
+   }
+   function LCTFGame::awardScoreFlagDefend(%game, %killerID){
+      %val = parent::awardScoreFlagDefend(%game, %killerID);
+      %killerID.dtStats.stat["flagDefends"] = %killerID.flagDefends;
+      dtMinMax("flagDefends", "flag", 1, %killerID.dtStats.stat["flagDefends"], %killerID);
+      return %val;
+   }
+   function LCTFGame::awardScoreStalemateReturn(%game, %cl){
+      %val = parent::awardScoreStalemateReturn(%game, %cl);
+      %cl.dtStats.stat["stalemateReturn"]++;
+      return %val;
+   }
+
    function SCtFGame::recalcScore(%game, %cl){
       parent::recalcScore(%game, %cl);
       %dtStats = %cl.dtStats;
@@ -2715,6 +2986,19 @@ package dtStats{
 
 
 // there is no main function for these
+function  LCTFGame::awardScoreDeath(%game, %victimID){
+   parent::awardScoreDeath(%game, %victimID);
+   %victimID.dtStats.stat["deaths"]  = %victimID.deaths;
+}
+function LCTFGame::awardScoreSuicide(%game, %victimID){
+   parent::awardScoreSuicide(%game, %victimID);
+   %victimID.dtStats.stat["suicides"]  = %victimID.suicides;
+}
+function LCTFGame::awardScoreTeamkill(%game, %victimID, %killerID){
+   parent::awardScoreTeamkill(%game, %victimID, %killerID);
+   %killerID.dtStats.stat["teamKills"] = %killerID.teamKills;
+}
+
 function  SCtFGame::awardScoreDeath(%game, %victimID){
    parent::awardScoreDeath(%game, %victimID);
    %victimID.dtStats.stat["deaths"]  = %victimID.deaths;
@@ -2727,6 +3011,7 @@ function SCtFGame::awardScoreTeamkill(%game, %victimID, %killerID){
    parent::awardScoreTeamkill(%game, %victimID, %killerID);
    %killerID.dtStats.stat["teamKills"] = %killerID.teamKills;
 }
+
 function  CTFGame::awardScoreDeath(%game, %victimID){
    parent::awardScoreDeath(%game, %victimID);
    %victimID.dtStats.stat["deaths"]  = %victimID.deaths;
@@ -2905,13 +3190,13 @@ function CTFGame::sendDebriefing(%game, %client){
    }
 }
 
-function SCtFGame::sendDebriefing(%game, %client){
+function LCTFGame::sendDebriefing(%game, %client){
    if(%client.isWatchOnly){
       parent::sendDebriefing(%game, %client);
       return;
    }
    messageClient( %client, 'MsgClearDebrief', "" );
-   if($dtStats::teamDebrief){
+   if($dtStats::teamDebrief == 2){
       %topScore = "";
       %topCount = 0;
       for ( %team = 1; %team <= %game.numTeams; %team++ ){
@@ -2949,7 +3234,7 @@ function SCtFGame::sendDebriefing(%game, %client){
          else if(!isObject(%t1Obj) && isObject(%t2Obj))
             messageClient( %client, 'MsgDebriefAddLine', "", "<tab:130,170,210,250,300,430,470,510,550><color:3cb4b4><font:univers condensed:15>\t\t\t\t\t" @ %i+1 @ "." @  getTaggedString(%t2Obj.name) @  "\t" @ %t2Obj.score @ "\t" @ %t2Obj.offenseScore @ "\t" @ %t2Obj.defenseScore @ "\t" @ %t2Obj.kills);
       }
-            //now go through an list all the observers:
+      //now go through an list all the observers:
       %printedHeader = false;
       for (%i = 0; %i <  ClientGroup.getCount(); %i++)
       {
@@ -2963,6 +3248,269 @@ function SCtFGame::sendDebriefing(%game, %client){
                messageClient(%client, 'MsgDebriefAddLine', "", "\n\n<tab:130,170,210,250,300><color:00dc00>OBSERVERS\tScore\tOff\tDef\tKills");
             }
             messageClient( %client, 'MsgDebriefAddLine', "", "<tab:130,170,210,250,300><color:3cb4b4> <font:univers condensed:15>" @ getTaggedString(%cl.name) @ "\t" @ %cl.score @ "\t" @ %cl.offenseScore @ "\t" @ %cl.defenseScore @ "\t" @ %cl.kills);
+         }
+      }
+      extendedDebrief(%game, %client);
+   }
+   else if($dtStats::teamDebrief == 1){
+      %topScore = "";
+      %topCount = 0;
+      for ( %team = 1; %team <= %game.numTeams; %team++ )
+      {
+         if ( %topScore $= "" || $TeamScore[%team] > %topScore )
+         {
+            %topScore = $TeamScore[%team];
+            %firstTeam = %team;
+            %topCount = 1;
+         }
+         else if ( $TeamScore[%team] == %topScore )
+         {
+            %secondTeam = %team;
+            %topCount++;
+         }
+      }
+
+      // Mission result:
+      if ( %topCount == 1 )
+         messageClient( %client, 'MsgDebriefResult', "", '<just:center>Team %1 wins!', %game.getTeamName(%firstTeam) );
+      else if ( %topCount == 2 )
+         messageClient( %client, 'MsgDebriefResult', "", '<just:center>Team %1 and Team %2 tie!', %game.getTeamName(%firstTeam), %game.getTeamName(%secondTeam) );
+      else
+         messageClient( %client, 'MsgDebriefResult', "", '<just:center>The mission ended in a tie.' );
+
+      // Team scores:
+      messageClient( %client, 'MsgDebriefAddLine', "", '<spush><color:00dc00><font:univers condensed:18>TEAM<lmargin%%:35>SCORE<spop>' );
+      for ( %team = 1; %team - 1 < %game.numTeams; %team++ )
+      {
+         if ( $TeamScore[%team] $= "" )
+            %score = 0;
+         else
+            %score = $TeamScore[%team];
+         messageClient( %client, 'MsgDebriefAddLine', "", '<lmargin:0><clip%%:60> %1</clip><lmargin%%:35><clip%%:40> %2</clip>', %game.getTeamName(%team), %score );
+      }
+
+      // Player scores:
+      messageClient( %client, 'MsgDebriefAddLine', "", '\n<lmargin:0><spush><color:00dc00><font:univers condensed:18>PLAYER<lmargin%%:20>TEAM<lmargin%%:35>SCORE<lmargin%%:45>KILLS<lmargin%%:55>Assists<lmargin%%:65>OffKills<lmargin%%:75>DefKills<lmargin%%:85>Disc MA<spop>' );
+      for ( %team = 1; %team - 1 < %game.numTeams; %team++ )
+         %count[%team] = 0;
+
+      %notDone = true;
+      while ( %notDone )
+      {
+         // Get the highest remaining score:
+         %highScore = "";
+         for ( %team = 1; %team <= %game.numTeams; %team++ )
+         {
+            if ( %count[%team] < $TeamRank[%team, count] && ( %highScore $= "" || $TeamRank[%team, %count[%team]].score > %highScore ) )
+            {
+               %highScore = $TeamRank[%team, %count[%team]].score;
+               %highTeam = %team;
+            }
+         }
+
+         // Send the debrief line:
+         %cl = $TeamRank[%highTeam, %count[%highTeam]];
+         %score = %cl.score $= "" ? 0 : %cl.score;
+         %kills = %cl.kills $= "" ? 0 : %cl.kills;
+         %line = '<lmargin:0><clip%%:40>%1</clip><lmargin%%:20><clip%%:30> %2</clip><lmargin%%:35>%3<lmargin%%:45>%4<lmargin%%:55>%5<lmargin%%:65>%6<lmargin%%:75>%7<lmargin%%:85>%8';
+         messageClient( %client, 'MsgDebriefAddLine', "", %line, %cl.name, %game.getTeamName(%cl.team), %score, %kills, %cl.dtStats.stat["assist"], %cl.dtStats.stat["OffKills"], %cl.dtStats.stat["DefKills"], %cl.dtStats.stat["discMA"] );
+
+         %count[%highTeam]++;
+         %notDone = false;
+         for ( %team = 1; %team - 1 < %game.numTeams; %team++ )
+         {
+            if ( %count[%team] < $TeamRank[%team, count] )
+            {
+               %notDone = true;
+               break;
+            }
+         }
+      }
+
+      //now go through an list all the observers:
+      %count = ClientGroup.getCount();
+      %printedHeader = false;
+      for (%i = 0; %i < %count; %i++)
+      {
+         %cl = ClientGroup.getObject(%i);
+         if (%cl.team <= 0)
+         {
+            //print the header only if we actually find an observer
+            if (!%printedHeader)
+            {
+               %printedHeader = true;
+               messageClient(%client, 'MsgDebriefAddLine', "", '\n<lmargin:0><spush><color:00dc00><font:univers condensed:18>OBSERVERS<lmargin%%:35>SCORE<lmargin%%:45>KILLS<lmargin%%:55>Assists<lmargin%%:65>OffKills<lmargin%%:75>DefKills<lmargin%%:85>Disc MA<spop>');
+            }
+
+            //print out the client
+            %score = %cl.score $= "" ? 0 : %cl.score;//<bitmap:bullet_2>
+            %line = '<lmargin:0><clip%%:40>%1</clip><lmargin%%:20><clip%%:30> %2</clip><lmargin%%:35>%3<lmargin%%:45>%4<lmargin%%:55>%5<lmargin%%:65>%6<lmargin%%:75>%7<lmargin%%:85>%8';
+            messageClient( %client, 'MsgDebriefAddLine', "", %line, %cl.name, "", %score, %kills, %cl.dtStats.stat["assist"], %cl.dtStats.stat["OffKills"], %cl.dtStats.stat["DefKills"], %cl.dtStats.stat["discMA"] );
+         }
+      }
+      extendedDebrief(%game, %client);
+   }
+   else{
+      parent::sendDebriefing(%game, %client);
+   }
+}
+
+function SCtFGame::sendDebriefing(%game, %client){
+   if(%client.isWatchOnly){
+      parent::sendDebriefing(%game, %client);
+      return;
+   }
+   messageClient( %client, 'MsgClearDebrief', "" );
+   if($dtStats::teamDebrief == 2){
+      %topScore = "";
+      %topCount = 0;
+      for ( %team = 1; %team <= %game.numTeams; %team++ ){
+         if ( %topScore $= "" || $TeamScore[%team] > %topScore ){
+            %topScore = $TeamScore[%team];
+            %firstTeam = %team;
+            %topCount = 1;
+         }
+         else if ( $TeamScore[%team] == %topScore ){
+            %secondTeam = %team;
+            %topCount++;
+         }
+      }
+
+      // Mission result:
+      if ( %topCount == 1 )
+         messageClient( %client, 'MsgDebriefResult', "", '<just:center>Team %1 wins!', %game.getTeamName(%firstTeam) );
+      else if ( %topCount == 2 )
+         messageClient( %client, 'MsgDebriefResult', "", '<just:center>Team %1 and Team %2 tie!', %game.getTeamName(%firstTeam), %game.getTeamName(%secondTeam) );
+      else
+         messageClient( %client, 'MsgDebriefResult', "", '<just:center>The mission ended in a tie.' );
+
+      messageClient( %client, 'MsgDebriefAddLine', "", ' ' );
+      messageClient( %client, 'MsgDebriefAddLine', "", '<tab:100,300,400><color:00dcd4><font:univers condensed:30>%1\t%3\t%2\t%4\n<font:univers condensed:18>', $teamName[1], $teamName[2], $TeamScore[1], $TeamScore[2]);
+      messageClient( %client, 'MsgDebriefAddLine', "", '<tab:130,170,210,250,300,430,470,510,550><color:00dc00>Player\tScore\tOff\tDef\tKills\tPlayer\tScore\tOff\tDef\tKills');
+
+      %teamsize = ($TeamRank[1, count] > $TeamRank[2, count]) ? $TeamRank[1, count] : $TeamRank[2, count];
+      for(%i=0; %i < %teamsize; %i++){
+         %t1Obj = $TeamRank[1, %i];
+         %t2Obj = $TeamRank[2, %i];
+         if(isObject(%t1Obj) && isObject(%t2Obj))
+            messageClient( %client, 'MsgDebriefAddLine', "", "<tab:130,170,210,250,300,430,470,510,550><color:3cb4b4><font:univers condensed:15>" @ %i+1 @ "." @  getTaggedString(%t1Obj.name) @ "\t" @ %t1Obj.score @ "\t" @ %t1Obj.offenseScore @ "\t" @ %t1Obj.defenseScore @ "\t" @ %t1Obj.kills @ "\t" @ %i+1 @ "." @  getTaggedString(%t2Obj.name) @  "\t" @ %t2Obj.score @ "\t" @ %t2Obj.offenseScore @ "\t" @ %t2Obj.defenseScore @ "\t" @ %t2Obj.kills);
+         else if(isObject(%t1Obj) && !isObject(%t2Obj))
+            messageClient( %client, 'MsgDebriefAddLine', "", "<tab:130,170,210,250,300,430,470,510,550><color:3cb4b4><font:univers condensed:15>" @ %i+1 @ "." @  getTaggedString(%t1Obj.name) @ "\t" @ %t1Obj.score @ "\t" @ %t1Obj.offenseScore @ "\t" @ %t1Obj.defenseScore @ "\t" @ %t1Obj.kills @ "\t\t\t\t\t");
+         else if(!isObject(%t1Obj) && isObject(%t2Obj))
+            messageClient( %client, 'MsgDebriefAddLine', "", "<tab:130,170,210,250,300,430,470,510,550><color:3cb4b4><font:univers condensed:15>\t\t\t\t\t" @ %i+1 @ "." @  getTaggedString(%t2Obj.name) @  "\t" @ %t2Obj.score @ "\t" @ %t2Obj.offenseScore @ "\t" @ %t2Obj.defenseScore @ "\t" @ %t2Obj.kills);
+      }
+      //now go through an list all the observers:
+      %printedHeader = false;
+      for (%i = 0; %i <  ClientGroup.getCount(); %i++)
+      {
+         %cl = ClientGroup.getObject(%i);
+         if (%cl.team <= 0)
+         {
+            //print the header only if we actually find an observer
+            if (!%printedHeader)
+            {
+               %printedHeader = true;
+               messageClient(%client, 'MsgDebriefAddLine', "", "\n\n<tab:130,170,210,250,300><color:00dc00>OBSERVERS\tScore\tOff\tDef\tKills");
+            }
+            messageClient( %client, 'MsgDebriefAddLine', "", "<tab:130,170,210,250,300><color:3cb4b4> <font:univers condensed:15>" @ getTaggedString(%cl.name) @ "\t" @ %cl.score @ "\t" @ %cl.offenseScore @ "\t" @ %cl.defenseScore @ "\t" @ %cl.kills);
+         }
+      }
+      extendedDebrief(%game, %client);
+   }
+   else if($dtStats::teamDebrief == 1){
+      %topScore = "";
+      %topCount = 0;
+      for ( %team = 1; %team <= %game.numTeams; %team++ )
+      {
+         if ( %topScore $= "" || $TeamScore[%team] > %topScore )
+         {
+            %topScore = $TeamScore[%team];
+            %firstTeam = %team;
+            %topCount = 1;
+         }
+         else if ( $TeamScore[%team] == %topScore )
+         {
+            %secondTeam = %team;
+            %topCount++;
+         }
+      }
+
+      // Mission result:
+      if ( %topCount == 1 )
+         messageClient( %client, 'MsgDebriefResult', "", '<just:center>Team %1 wins!', %game.getTeamName(%firstTeam) );
+      else if ( %topCount == 2 )
+         messageClient( %client, 'MsgDebriefResult', "", '<just:center>Team %1 and Team %2 tie!', %game.getTeamName(%firstTeam), %game.getTeamName(%secondTeam) );
+      else
+         messageClient( %client, 'MsgDebriefResult', "", '<just:center>The mission ended in a tie.' );
+
+      // Team scores:
+      messageClient( %client, 'MsgDebriefAddLine', "", '<spush><color:00dc00><font:univers condensed:18>TEAM<lmargin%%:35>SCORE<spop>' );
+      for ( %team = 1; %team - 1 < %game.numTeams; %team++ )
+      {
+         if ( $TeamScore[%team] $= "" )
+            %score = 0;
+         else
+            %score = $TeamScore[%team];
+         messageClient( %client, 'MsgDebriefAddLine', "", '<lmargin:0><clip%%:60> %1</clip><lmargin%%:35><clip%%:40> %2</clip>', %game.getTeamName(%team), %score );
+      }
+
+      // Player scores:
+      messageClient( %client, 'MsgDebriefAddLine', "", '\n<lmargin:0><spush><color:00dc00><font:univers condensed:18>PLAYER<lmargin%%:20>TEAM<lmargin%%:35>SCORE<lmargin%%:45>KILLS<lmargin%%:55>Assists<lmargin%%:65>OffKills<lmargin%%:75>DefKills<lmargin%%:85>Disc MA<spop>' );
+      for ( %team = 1; %team - 1 < %game.numTeams; %team++ )
+         %count[%team] = 0;
+
+      %notDone = true;
+      while ( %notDone )
+      {
+         // Get the highest remaining score:
+         %highScore = "";
+         for ( %team = 1; %team <= %game.numTeams; %team++ )
+         {
+            if ( %count[%team] < $TeamRank[%team, count] && ( %highScore $= "" || $TeamRank[%team, %count[%team]].score > %highScore ) )
+            {
+               %highScore = $TeamRank[%team, %count[%team]].score;
+               %highTeam = %team;
+            }
+         }
+
+         // Send the debrief line:
+         %cl = $TeamRank[%highTeam, %count[%highTeam]];
+         %score = %cl.score $= "" ? 0 : %cl.score;
+         %kills = %cl.kills $= "" ? 0 : %cl.kills;
+         %line = '<lmargin:0><clip%%:40>%1</clip><lmargin%%:20><clip%%:30> %2</clip><lmargin%%:35>%3<lmargin%%:45>%4<lmargin%%:55>%5<lmargin%%:65>%6<lmargin%%:75>%7<lmargin%%:85>%8';
+         messageClient( %client, 'MsgDebriefAddLine', "", %line, %cl.name, %game.getTeamName(%cl.team), %score, %kills, %cl.dtStats.stat["assist"], %cl.dtStats.stat["OffKills"], %cl.dtStats.stat["DefKills"], %cl.dtStats.stat["discMA"] );
+
+         %count[%highTeam]++;
+         %notDone = false;
+         for ( %team = 1; %team - 1 < %game.numTeams; %team++ )
+         {
+            if ( %count[%team] < $TeamRank[%team, count] )
+            {
+               %notDone = true;
+               break;
+            }
+         }
+      }
+
+      //now go through an list all the observers:
+      %count = ClientGroup.getCount();
+      %printedHeader = false;
+      for (%i = 0; %i < %count; %i++)
+      {
+         %cl = ClientGroup.getObject(%i);
+         if (%cl.team <= 0)
+         {
+            //print the header only if we actually find an observer
+            if (!%printedHeader)
+            {
+               %printedHeader = true;
+               messageClient(%client, 'MsgDebriefAddLine', "", '\n<lmargin:0><spush><color:00dc00><font:univers condensed:18>OBSERVERS<lmargin%%:35>SCORE<lmargin%%:45>KILLS<lmargin%%:55>Assists<lmargin%%:65>OffKills<lmargin%%:75>DefKills<lmargin%%:85>Disc MA<spop>');
+            }
+
+            //print out the client
+            %score = %cl.score $= "" ? 0 : %cl.score;//<bitmap:bullet_2>
+            %line = '<lmargin:0><clip%%:40>%1</clip><lmargin%%:20><clip%%:30> %2</clip><lmargin%%:35>%3<lmargin%%:45>%4<lmargin%%:55>%5<lmargin%%:65>%6<lmargin%%:75>%7<lmargin%%:85>%8';
+            messageClient( %client, 'MsgDebriefAddLine', "", %line, %cl.name, "", %score, %kills, %cl.dtStats.stat["assist"], %cl.dtStats.stat["OffKills"], %cl.dtStats.stat["DefKills"], %cl.dtStats.stat["discMA"] );
          }
       }
       extendedDebrief(%game, %client);
@@ -3440,6 +3988,128 @@ package dtStatsGame{
       parent::playerTouchOwnFlag(%game, %player, %flag);
    }
 /////////////////////////////////////////////////////////////////////////////
+   function LCTFGame::playerDroppedFlag(%game, %player){
+      %flag = %player.holdingFlag;
+
+      %ftime = getSimTime() - %game.dtTotalFlagTime[%flag];
+      %player.client.dtStats.stat["flagTimeMin"] += (%ftime/1000)/60;
+
+      %game.dtTotalFlagTime[%flag] = 0;
+      if(%player.getState() !$= "Dead"){
+         %player.client.dtStats.stat["flagToss"]++;
+         %flag.pass = 1;
+         %flag.lastDTStat = %player.client.dtStats;
+      }
+      else{
+         %flag.pass = 0;
+      }
+      parent::playerDroppedFlag(%game, %player);
+   }
+   function LCTFGame::boundaryLoseFlag(%game, %player){
+      %flag = %player.holdingFlag;
+
+      %ftime = getSimTime() - %game.dtTotalFlagTime[%flag];
+      %player.client.dtStats.stat["flagTimeMin"] += (%ftime/1000)/60;
+
+      %game.dtTotalFlagTime[%flag] = 0;
+      parent::boundaryLoseFlag(%game, %player);
+   }
+   function LCTFGame::updateFlagTransform(%game, %flag){
+      parent::updateFlagTransform(%game, %flag);
+      %vel = %flag.getVelocity();
+      %flag.speed = vectorLen(%vel) ;
+   }
+   function LCTFGame::playerTouchEnemyFlag(%game, %player, %flag){
+      if(%flag.isHome){
+         %game.dtTotalFlagTime[%flag] = getSimTime();
+      }
+      if(!%player.flagTossWait){
+         if(%flag.speed > 10 && %flag.pass && %player.client.dtStats != %flag.lastDTStat){
+            %player.client.dtStats.stat["flagCatch"]++;
+            %speed = vectorLen(%player.getVelocity() * 3.6);
+            %player.client.dtStats.stat["flagCatchSpeed"] = (%player.client.dtStats.stat["flagCatchSpeed"] > %speed) ? %player.client.dtStats.stat["flagCatchSpeed"] : %speed;
+            if(rayTest(%player, $dtStats::midAirHeight)){
+               %player.client.dtStats.stat["maFlagCatch"]++;
+               %player.client.dtStats.stat["maFlagCatchSpeed"] = (%player.client.dtStats.stat["maFlagCatchSpeed"] > %speed) ? %player.client.dtStats.stat["maFlagCatchSpeed"] : %speed;
+            }
+            if(isObject(%flag.lastDTStat)){
+               %flag.lastDTStat.stat["flagTossCatch"]++;
+               %flag.lastDTStat = -1;
+            }
+            %flag.speed = 0;
+            %flag.pass = 0;
+
+         }
+         %grabspeed = mFloor(VectorLen(setWord(%player.getVelocity(), 2, 0)) * 3.6);
+         if(%grabSpeed > %player.client.dtStats.stat["grabSpeed"] || !%player.client.dtStats.stat["grabSpeed"]){
+            %player.client.dtStats.stat["grabSpeed"]  = %grabSpeed;
+            dtMinMax("grabSpeed", "flag", 1, %player.client.dtStats.stat["grabSpeed"],  %player.client);
+         }
+      }
+      parent::playerTouchEnemyFlag(%game, %player, %flag);
+   }
+
+   function LCTFGame::flagCap(%game, %player){
+      %flag = %player.holdingFlag;
+      %clTeam = %player.client.team;
+      %dtStats = %player.client.dtStats;
+      %time = ((getSimTime() - $missionStartTime)/1000)/60;
+       if(%clTeam == 1){
+         $dtStats::teamOneCapCount++;
+         if($dtStats::teamOneCapCount == 1)
+            $dtStats::teamOneCapTimes = 0 @ "," @ cropFloat(%time,1);
+         else
+            $dtStats::teamOneCapTimes = $dtStats::teamOneCapTimes  @ "," @ cropFloat(%time,1);
+      }
+      else{
+         $dtStats::teamTwoCapCount++;
+         if($dtStats::teamTwoCapCount == 1)
+            $dtStats::teamTwoCapTimes = 0 @ "," @ cropFloat(%time,1);
+         else
+            $dtStats::teamTwoCapTimes  = $dtStats::teamTwoCapTimes  @ "," @ cropFloat(%time,1);
+      }
+      if(%game.dtTotalFlagTime[%flag]){
+         %heldTime = (getSimTime() - %game.dtTotalFlagTime[%flag])/1000;
+         %dtStats.stat["flagTimeMin"]  += %heldTime/60;
+         if(%heldTime < %dtStats.stat["heldTimeSec"] || !%dtStats.stat["heldTimeSec"]){
+            %dtStats.stat["heldTimeSec"]  = %heldTime;
+            dtMinMax("heldTimeSec", "flag", 2, %heldTime,  %player.client);
+         }
+         if($dtStats::ctfTimes){
+            %heldTimeMS = getSimTime() - %game.dtTotalFlagTime[%flag];
+            %fTime = %game.formatTime(%heldTimeMS, true);
+            bottomprint(%player.client, "You captured the flag in" SPC %fTime SPC "seconds.", 10, 1);
+            if(($HostGamePlayerCount - $HostGameBotCount) >= $dtStats::ctfTimesPlayerLimit){
+               %mapName  = cleanMapName($missionName);
+               if(%heldTimeMS < getField($dtServer::capTimes[%mapName,%game.class,%clTeam], 0) || getFieldCount($dtServer::capTimes[%mapName,%game.class,%clTeam]) != 2){
+                  if(getFieldCount($dtServer::capTimes[%mapName,%game.class,%clTeam]) == 2){
+                     %oldTime = getField($dtServer::capTimes[%mapName,%game.class,%clTeam], 0);
+                     %saved = "\c2Saved: \c3-" @ %game.formatTime(%oldTime - %heldTimeMS, true) @ "\c2";
+                  }
+                  //schedule(2000, 0, "messageAll", 'MsgCTFNewRecord', "\c2It's a new record! Time: \c3"@ %fTime @"\c2 " @ %saved  @ "~wfx/misc/hunters_horde.wav");
+                  schedule(4000, 0, "messageAll", 'MsgCTFNewRecord', '\c2It\'s a new %3 record! Time: \c3%1 \c2%2  ~wfx/misc/hunters_horde.wav',%fTime,%saved,$TeamName[%clTeam]);
+                  $dtServer::capTimes[%mapName,%game.class,%clTeam] = %heldTimeMS TAB %dtStats.name;
+               }
+            }
+         }
+      }
+      parent::flagCap(%game, %player);
+   }
+   function LCTFGame::playerTouchOwnFlag(%game, %player, %flag){
+      if(!%flag.isHome){
+         if(%flag.speed > 10 && %flag.pass){
+            %player.client.dtStats.stat["interceptedFlag"]++;
+            %speed = vectorLen(%player.getVelocity() * 3.6);
+            %player.client.dtStats.stat["interceptSpeed"] = (%player.client.dtStats.stat["interceptSpeed"] > %speed) ? %player.client.dtStats.stat["interceptSpeed"] : %speed;
+            %player.client.dtStats.stat["interceptFlagSpeed"] = (%player.client.dtStats.stat["interceptFlagSpeed"] > %flag.speed) ? %player.client.dtStats.stat["interceptFlagSpeed"] : %flag.speed;
+            if(rayTest(%player, $dtStats::midAirHeight))
+               %player.client.dtStats.stat["maInterceptedFlag"]++;
+         }
+      }
+      parent::playerTouchOwnFlag(%game, %player, %flag);
+   }
+
+
    function SCtFGame::playerDroppedFlag(%game, %player){
       %flag = %player.holdingFlag;
 
@@ -4316,7 +4986,7 @@ function dtStatsGameOver( %game ){
          $dtServerVars::pugDate[%game.class] = $dtServerVars::pugDate[%game.class] TAB formattimestring("M-d-yy");
          $dtServerVars::pugFS[%game.class] = $dtServerVars::pugFS[%game.class] TAB $TeamScore[1] SPC $TeamScore[2];
       }
-      if($dtStats::tmMode &&  (%game.class $= "CTFGame" ||  %game.class $= "SCtFGame")){
+      if($dtStats::tmMode &&  (%game.class $= "CTFGame" ||  %game.class $= "LCTFGame" ||  %game.class $= "SCtFGame")){
          if($dtStats::tmModeGC++ >= 6){// only works in ctf mode
             $dtStats::tmMode = 0;
             $dtStats::tmModeGC = 0;
@@ -4516,7 +5186,7 @@ function DefaultGame::postGameStats(%game,%dtStats){ //stats to add up at the en
 
 
 
-   if(%game.class $= "CTFGame" || %game.class $= "SCtFGame"){
+   if(%game.class $= "CTFGame" || %game.class $= "LCTFGame" || %game.class $= "SCtFGame"){
       %dtStats.stat["teamOneCapTimes"]  = $dtStats::teamOneCapTimes;
       %dtStats.stat["teamTwoCapTimes"]  = $dtStats::teamTwoCapTimes;
       %dtStats.stat["teamScore"] =  $TeamScore[%dtStats.stat["dtTeam"]];
@@ -4639,6 +5309,25 @@ function DMGame::getGamePct(%game){
    %pct =  (%lScore / %scoreLimit) * 100;
    %scorePct =  (%pct > 100) ? 100 : %pct;
 
+   if(%scorePct > %timePct)
+      return %scorePct;
+   else
+      return %timePct;
+}
+function LCTFGame::getGamePct(%game){
+   %curTimeLeftMS =  ((getSimTime() - $missionStartTime)/1000)/60;
+   %timePct =    (%curTimeLeftMS /  $Host::TimeLimit) * 100;
+   %timePct = (%timePct > 100) ?  100 : %timePct;
+   %scoreLimit = MissionGroup.CTF_scoreLimit * %game.SCORE_PER_TEAM_FLAG_CAP;
+   if(%scoreLimit $= "")
+      %scoreLimit = 5 * %game.SCORE_PER_TEAM_FLAG_CAP;
+
+   if($TeamScore[1] > $TeamScore[2])
+      %pct = ($TeamScore[1] / %scoreLimit) * 100;
+   else
+      %pct =  ($TeamScore[2] / %scoreLimit) * 100;
+
+   %scorePct =  (%pct > 100) ? 100 : %pct;
    if(%scorePct > %timePct)
       return %scorePct;
    else
@@ -7438,7 +8127,7 @@ function statsMenu(%client,%game){
             messageClient( %client, 'SetLineHud', "", %tag, %index++, %line,0,"buildStats",0,%time);
          }
 //------------------------------------------------------------------------------
-         if(%game $= "CTFGame" || %game $= "SCtFGame"){
+         if(%game $= "CTFGame" || %game $= "LCTFGame" || %game $= "SCtFGame"){
             if(!$Host::TournamentMode){
                if(!$dtStats::tmMode){
                   %line = '<a:gamelink\tS\tSP\t%1\t%2\t%3>  + Enable Tournament Map Stats</a> - Auto enables with tournament mode';
@@ -7458,11 +8147,13 @@ function statsMenu(%client,%game){
             %line = '  + Map Stats - can only be enabled in CTF or LCTF</a>';
             messageClient( %client, 'SetLineHud', "", %tag, %index++, %line);
          }
-         if(getFieldCount($dtServerVars::pugIDS["CTFGame"]) || getFieldCount($dtServerVars::pugIDS["SCtFGame"])  > 0){
+         if(getFieldCount($dtServerVars::pugIDS["CTFGame"]) || getFieldCount($dtServerVars::pugIDS["LCTFGame"]) || getFieldCount($dtServerVars::pugIDS["SCtFGame"]) ){
             if(!$Host::TournamentMode && !$dtStats::tmMode){
                if(!$dtStats::tmCompile){
                   %line = '<a:gamelink\tS\tSP\t0\t%1\t%3>  + Compile Tournament Stats</a> - %2 Games await compiling ';
-                  %gameAmount = getFieldCount($dtServerVars::pugIDS["CTFGame"]) > getFieldCount($dtServerVars::pugIDS["SCtFGame"]) ? getFieldCount($dtServerVars::pugIDS["CTFGame"]) : getFieldCount($dtServerVars::pugIDS["SCtFGame"]);
+                  %gameAmount += getFieldCount($dtServerVars::pugIDS["CTFGame"]);
+                  %gameAmount += getFieldCount($dtServerVars::pugIDS["LCTFGame"]);
+                  %gameAmount += getFieldCount($dtServerVars::pugIDS["SCtFGame"]);
                   messageClient( %client, 'SetLineHud', "", %tag, %index++, %line,"tmCompile",%gameAmount);
                }
                else{
@@ -9184,7 +9875,7 @@ function statsMenu(%client,%game){
                %nameTitle3 = "<color:0befe7>" @ %var3Title SPC "<color:03d597>" @ %i3;
                messageClient( %client, 'SetLineHud', "", %tag, %index++, %line,0,0,%nameTitle1,%nameTitle2,%nameTitle3,%vsc1,%vsc2,%vsc3);
 
-            case "SCtfGame":
+            case "LCTFGame" or "SCtFGame":
                //1
                %var1 = "scoreTG";  %var1Title = "Score Total:";   %var1Name = "Score Total";    %var1TypeName = "Total";
                %var2 = "scoreAVG"; %var2Title = "Score Avg:";     %var2Name = "Score Average "; %var2TypeName = "Average";
@@ -11584,7 +12275,7 @@ function dtPingStats(){
       if(isObject(%cl.dtStats)){
          if(isObject(%cl.player)){
             %tform = %cl.player.getTransform();
-            if(isObject(Game) && ( Game.class $= "CTFGame" || Game.class $= "SCtFGame")){
+            if(isObject(Game) && ( Game.class $= "CTFGame" || Game.class $= "LCTFGame" || Game.class $= "SCtFGame")){
                %fPos = $dtStats::FlagPos[%cl.team];
                %oTeam = (%cl.team == 1) ?  2 : 1;
                %fePos = $dtStats::FlagPos[%oTeam];
@@ -14762,7 +15453,7 @@ function genBigStats(%game, %mon, %year){
          schedule(%callTime * %callCount++,0,"addGLText","Damage", (%tabspace * 4) + %xOffset, ((%vertSpace * (%i + 1)) + %yOffset) + (%y * %gridYOffset), "11 239 231", "RC", 15, 500);
          %weapons = "Blaster\tPlasma Rifle\tChaingun\tSpinfusor\tGrenade Launcher\tLaser Rifle\tFusion Mortar\tMissile Launcher\tShocklance\tMine\tHand Grenade\tSatchel Charge";
       }
-      else if(%game $= "SCtFGame"){
+      else if(%game $= "LCTFGame" || %game $= "SCtFGame" ){
          schedule(%callTime * %callCount++,0,"addGLText","Weapon", %xOffset, ((%vertSpace * (%i + 1)) + %yOffset) + (%y * %gridYOffset), "11 239 231", "RC", 15, 500);
          schedule(%callTime * %callCount++,0,"addGLText","Kills", (%tabspace * 1) + %xOffset, ((%vertSpace * (%i + 1)) + %yOffset) + (%y * %gridYOffset), "11 239 231", "RC", 15, 500);
          schedule(%callTime * %callCount++,0,"addGLText","MidAirs", (%tabspace * 2) + %xOffset, ((%vertSpace * (%i + 1)) + %yOffset) + (%y * %gridYOffset), "11 239 231", "RC", 15, 500);
@@ -15065,7 +15756,7 @@ function compileGameImage(%gameIndex){
             }
             switch$(%game){
                case "CTFGame": renderCTFMapTextTM(%id);
-               case "SCtFGame":  renderLCTFMapTextTM(%id);
+               case "LCTFGame" or "SCtFGame":  renderLCTFMapTextTM(%id);
             }
             $idPugIndex++;
          }
@@ -17686,119 +18377,28 @@ function mapCyleTest(){
 //    Added custom two team debrief as well as a evo style extended stats
 //    Reworked enable disable, only disables stats saving and stats access, do to systems relying on systems
 //
-//    10.1 - 10.2
+//    10.1 - 10.2 - 10.3
 //    Ban system changes
 //    Fix bad loop in ban system
 //    Misc arena things
+//    Added LCTF Naming
+//    serverPrefs Support
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////Storage/////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-function testVarsRandomAll(%max){
-   %game = Game.class;
-   for(%q = 0; %q < $statsVars::count[%game]; %q++){
-      %varNameType = $statsVars::varNameType[%q,%game];
-      %varName = $statsVars::varName[%q,%game];
-      for(%i = 0; %i < ClientGroup.getCount(); %i++){
-         %client = ClientGroup.getObject(%i);
-         %val = getRandom(0,%max);
-         %client.dtStats.stat[%varName] = %val;
-         dtMinMax(%varName, "wep", 1, %val, %client);
-         dtMinMax(%varName, "flag", 1, %val, %client);
-         dtMinMax(%varName, "misc", 1, %val, %client);
-      }
-   }
-}
-
-
-function fib(%n) {
-   if (%n < 2) return %n;
-      return fib(%n - 1) + fib(%n - 2);
-}
-function testFib(){
-    %before = getRealTime();
-    echo(fib(25));
-    echo(getRealTime() - %before);
-}
-
-function testH(){
-    %header = getField($pugMapInfo,0) SPC "CTF";
-   %rp = "!_\"#$%&'()*+,-./:;<=>?@[\\]^'{|}~\t\n\r1234567890";
-   for(%i = 0; %i < strLen(%rp); %i++){
-      %rep = getSubStr(%rp,%i,1);
-      %header = strreplace(%header,%rep, " ");
-   }
-   error(%header);
-}
-
-
-
-function DecToBin(%dec)
-{
-	%length = mCeil(mLog(%dec) / mLog(2));
-	%bin = "";
-	for (%i = 0; %i <= %length; %i++)
-	{
-		%test = mPow(2, %length - %i);
-		if (%dec >= %test)
-		{
-			%bin = %bin @ "1";
-			%dec -= %test;
-		}
-		else if (%i > 0)
-			%bin = %bin @ "0";
-	}
-	return %bin;
-}
-function BinToDec(%bin)
-{
-	%dec = 0;
-	for (%i = 0; %i < strLen(%bin); %i++)
-		%dec += getSubStr(%bin, %i, 1) * mPow(2, strLen(%bin) - %i - 1);
-	return %dec;
-}
-
-function DecToHex(%dec)
-{
-	%bin = DecToBin(%dec);
-	while (strLen(%bin) % 4 != 0)
-		%bin = "0" @ %bin;
-
-	for (%i = 0; %i < strLen(%bin); %i += 4)
-	{
-		%block = getSubStr(%bin, strLen(%bin) - %i - 4, 4);
-		%part = BinToDec(%block);
-		if (%part > 9)
-		{
-			switch (%part)
-			{
-				case 10:
-					%hex = "a" @ %hex;
-				case 11:
-					%hex = "b" @ %hex;
-				case 12:
-					%hex = "c" @ %hex;
-				case 13:
-					%hex = "d" @ %hex;
-				case 14:
-					%hex = "e" @ %hex;
-				case 15:
-					%hex = "f" @ %hex;
-			}
-		}
-		else
-			%hex = %part @ %hex;
-	}
-	if (strlen(%hex) == 0)
-		return "00";
-	else
-		return %hex;
-}
-function printchars(){
-  	for (%i = 0; %i < 256; %i++)
-	{
-	   %char = collapseEscape("\\x" @ DecToHex(%i));
-	   %in  = strCmp(%char,"");
-		 echo(%in SPC %char);
-	}
-}
+//function testVarsRandomAll(%max){
+   //%game = Game.class;
+   //for(%q = 0; %q < $statsVars::count[%game]; %q++){
+      //%varNameType = $statsVars::varNameType[%q,%game];
+      //%varName = $statsVars::varName[%q,%game];
+      //for(%i = 0; %i < ClientGroup.getCount(); %i++){
+         //%client = ClientGroup.getObject(%i);
+         //%val = getRandom(0,%max);
+         //%client.dtStats.stat[%varName] = %val;
+         //dtMinMax(%varName, "wep", 1, %val, %client);
+         //dtMinMax(%varName, "flag", 1, %val, %client);
+         //dtMinMax(%varName, "misc", 1, %val, %client);
+      //}
+   //}
+//}
