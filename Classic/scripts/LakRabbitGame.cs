@@ -1170,10 +1170,14 @@ function LakRabbitGame::sendGameVoteMenu( %game, %client, %key )
 	%isAdmin = ( %client.isAdmin || %client.isSuperAdmin );
 
 	if(!%client.canVote && !%isAdmin)
-      return;
+    	return;
 
 	if( %game.scheduleVote $= "" )
 	{
+		//echo(%client.ForceVote);
+		if(%client.ForceVote $= "skip_confirm")
+			return;
+
 		if(!%isAdmin || (%isAdmin && %client.ForceVote))
 		{
 			if(!Game.duelMode)
@@ -1727,7 +1731,7 @@ function LakRabbitGame::onClientKilled(%game, %clVictim, %clKiller, %damageType,
 function LakRabbitGame::updateFlagTransform(%game, %flag)
 {
    %flag.setTransform(%flag.getTransform());
-   %game.updateFlagThread[%flag] = %game.schedule(100, "updateFlagTransform", %flag);
+   %game.updateFlagThread[%flag] = %game.schedule(256, "updateFlagTransform", %flag);
 }
 
 function LakRabbitGame::playerDroppedFlag(%game, %player)

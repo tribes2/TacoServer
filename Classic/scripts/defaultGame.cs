@@ -771,9 +771,6 @@ function DefaultGame::sendDebriefing( %game, %client )
          messageClient( %client, 'MsgDebriefAddLine', "", '<lmargin:0><clip%%:60> %1</clip><lmargin%%:60><clip%%:40> %2</clip>', %cl.name, %score);
       }
    }
-
-   if($Host::ClassicEvoStats && ($CurrentMissionType $= "CTF" || $CurrentMissionType $= "SCtF"))
-      sendEvoDebriefing(%client);
 }
 
 
@@ -1757,12 +1754,6 @@ function DefaultGame::clientMissionDropReady(%game, %client)
          %client.observerStartTime = getSimTime();
          commandToClient(%client, 'setHudMode', 'Observer');
          %client.setControlObject( %client.camera );
-
-         //displayObserverHud( %client, 0 );
-         // Eolk - flag stats stuff
-         //updateObserverFlyHud(%client);
-         if($Host::ClassicEvoStats && ($CurrentMissionType $= "CTF" || $CurrentMissionType $= "SCtF"))
-            schedule(10000, %client, updateObserverFlyHud, %client);
       }
 
       if( !%observer )
@@ -1782,17 +1773,6 @@ function DefaultGame::clientMissionDropReady(%game, %client)
             commandToClient(%client, 'setHudMode', 'Standard'); // the game has already started
             %client.setControlObject( %client.player );
          }
-      }
-
-      if( $Host::ClassicEvoStats && ($CurrentMissionType $= "CTF" || $CurrentMissionType $= "SCtF"))
-      {
-         %nickTeam1 = ($flagstats::heldTeam1 ? $flagstats::nickTeam1 : "N/A");
-         %realTeam1 = ($flagstats::heldTeam1 ? $flagstats::realTeam1 : "N/A");
-
-         %nickTeam2 = ($flagstats::heldTeam2 ? $flagstats::nickTeam2 : "N/A");
-         %realTeam2 = ($flagstats::heldTeam2 ? $flagstats::realTeam2 : "N/A");
-
-         BottomPrint(%client, "Best caps on " @ $CurrentMission @ ":\n" @ getTaggedString(%game.getTeamName(1)) @ ":" SPC %nickTeam1 @ " in " @ %realTeam1 @ " seconds\n" @ getTaggedString(%game.getTeamName(2)) @ ":" SPC %nickTeam2 @ " in " @ %realTeam2 @ " seconds", 20, 3);
       }
    }
    else

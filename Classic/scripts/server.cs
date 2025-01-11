@@ -145,6 +145,7 @@ function CreateServer(%mission, %missionType)
    exec("scripts/defaultGame.cs");
    exec("scripts/CTFGame.cs");
    exec("scripts/SCtFGame.cs");
+   exec("scripts/LCTFGame.cs");
    exec("scripts/PracticeCTFGame.cs");
    exec("scripts/TeamHuntersGame.cs");
    exec("scripts/SinglePlayerGame.cs");
@@ -175,6 +176,7 @@ function CreateServer(%mission, %missionType)
          (%type !$= PracticeCTFGame)  &&
          (%type !$= RabbitGame)       &&
          (%type !$= SCtFGame)         &&
+         (%type !$= LCTFGame)         &&
          (%type !$= SiegeGame)        &&
          (%type !$= SinglePlayerGame) &&
          (%type !$= TeamHuntersGame)  &&
@@ -1246,30 +1248,6 @@ function loadMission( %missionName, %missionType, %firstMission )
       %client = ClientGroup.getObject( %cl );
       if ( !%client.isAIControlled() )
          sendLoadInfoToClient( %client );
-   }
-
-   if($Host::ClassicEvoStats)
-   {
-      deleteVariables("$*stats::*");
-      if(%missionType $= "CTF" || %missionType $= "SCtF")
-      {
-         %fileIn = "stats/maps/classic/" @ %missionType @ "/" @ %missionName @ ".txt";
-
-         // Initialize the file if not exist
-         if(!isFile(%fileIn))
-         {
-            $flagstats::heldTeam1 = 0;
-            $flagstats::realTeam1 = 0;
-            $flagstats::nickTeam1 = 0;
-            $flagstats::heldTeam2 = 0;
-            $flagstats::realTeam2 = 0;
-            $flagstats::nickTeam2 = 0;
-
-            export("$flagstats::*", %fileIn, false);
-         }
-
-         exec(%fileIn);
-      }
    }
 
    // Eolk - Testing new stuff to make map rotation less stale.

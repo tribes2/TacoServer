@@ -466,30 +466,6 @@ function CTFGame::playerTouchEnemyFlag(%game, %player, %flag)
       if (%startStalemate)
          %game.stalemateSchedule = %game.schedule(%game.stalemateTimeMS, beginStalemate);
 
-      if($Host::ClassicEvoStats)
-      {
-         $stats::grabs[%client]++;
-         if($stats::grabs[%client] > $stats::grabs_counter)
-         {
-            $stats::grabs_counter = $stats::grabs[%client];
-            $stats::grabs_client = getTaggedString(%client.name);
-         }
-      }
-
-      if($Host::ClassicEvoStats)
-         %game.totalFlagHeldTime[%flag] = getSimTime();
-   }
-
-   if($Host::ClassicEvoStats && !%player.flagStatsWait)
-   {
-	  // get the grab speed
-	  %grabspeed = mFloor(VectorLen(setWord(%player.getVelocity(), 2, 0)) * 3.6);
-
-      if(%grabspeed > $stats::MaxGrabSpeed || ($stats::MaxGrabSpeed $= ""))
-      {
-        $stats::MaxGrabSpeed = %grabspeed;
-   		$stats::Grabber = getTaggedString(%client.name);
-      }
    }
 
    %flag.hide(true);
@@ -552,7 +528,7 @@ function CTFGame::playerLostFlagTarget(%game, %player)
 function CTFGame::updateFlagTransform(%game, %flag)
 {
    %flag.setTransform(%flag.getTransform());
-   %game.updateFlagThread[%flag] = %game.schedule(100, "updateFlagTransform", %flag);
+   %game.updateFlagThread[%flag] = %game.schedule(256, "updateFlagTransform", %flag);
 }
 //----------------------------------------------------------------------------------------
 
@@ -566,8 +542,6 @@ function CTFGame::playerDroppedFlag(%game, %player)
 
    %game.playerLostFlagTarget(%player);
 
-   if($Host::ClassicEvoStats)
-      %game.totalFlagHeldTime[%flag] = 0;
 
    %player.holdingFlag = ""; //player isn't holding a flag anymore
    %flag.carrier = "";  //flag isn't held anymore
@@ -624,65 +598,6 @@ function CTFGame::flagCap(%game, %player)
    %held = %game.formatTime(getSimTime() - %game.flagHeldTime[%flag], true); // z0dd - ZOD, 8/15/02. How long did player hold flag?
 
    %game.playerLostFlagTarget(%player);
-
-   if($Host::ClassicEvoStats)
-   {
-      %record = false;
-      %mincheck = false;
-      if($TotalTeamPlayerCount >= $Host::MinFlagRecordPlayerCount)
-         %mincheck = true;
-      if(%game.totalFlagHeldTime[%flag])
-      {
-         %held2 = getSimTime() - %game.totalFlagHeldTime[%flag];
-         %realtime = %game.formatTime(%held2, true);
-         %tm = %client.team;
-
-         if(%tm == 1 || %tm == 2)
-         {
-            if((%held2 < $flagstats::heldTeam[%tm]) || $flagstats::heldTeam[%tm] == 0)
-            {
-               if(%mincheck)
-               {
-                  %prevheld2 = $flagstats::heldTeam[%tm];
-                  $flagstats::heldTeam[%tm] = %held2;
-                  $flagstats::realTeam[%tm] = %realTime;
-                  $flagstats::nickTeam[%tm] = %client.nameBase;
-               }
-               %record = true;
-            }
-         }
-
-         if(%record == true)
-         {
-            if(%mincheck)
-            {
-               %fileOut = "stats/maps/classic/" @ $CurrentMissionType @ "/" @ $CurrentMission @ ".txt";
-               export("$flagstats::*", %fileOut, false);
-               if(%prevheld2)
-                  %saved = "\c2Saved: \c3-" @ %game.formatTime(%prevheld2 - %held2, true) @ "\c2";
-               schedule(4000, 0, "messageAll", 'MsgCTFNewRecord', "\c2It's a new record! Time: \c3"@%realtime@"\c2 " @ %saved @ "~wfx/misc/hunters_horde.wav");
-            }
-            else
-               schedule(4000, 0, "messageClient", %client, '', "\c2New flag records are disabled until" SPC $Host::MinFlagRecordPlayerCount SPC "players.");
-         }
-
-		   bottomprint(%client, "You captured the flag in" SPC %realTime SPC "seconds.", 10, 1);
-
-         $stats::caps[%client]++;
-         if($stats::caps[%client] > $stats::caps_counter)
-         {
-            $stats::caps_counter = $stats::caps[%client];
-            $stats::caps_client = getTaggedString(%client.name);
-         }
-
-         if(%held2 < $stats::fastestCap || !$stats::fastestCap)
-         {
-            $stats::fastestCap = %held2;
-            $stats::fastcap_time = %realTime;
-            $stats::fastcap_client = getTaggedString(%client.name);
-         }
-	   }
-   }
 
    //award points to player and team
    %teamName = %game.getTeamName(%flag.team);
@@ -864,7 +779,7 @@ function CTFGame::beginStalemate(%game)
    {
       messageAll( 'MsgStalemate', "\c3Anti turtle initialized. Flags will be returned to bases in " @ $Host::ClassicAntiTurtleTime @ " minutes.");
       %game.turtleSchedule = %game.schedule($Host::ClassicAntiTurtleTime * 60000, "antiTurtle");
-	  error(formatTimeString("HH:nn:ss") SPC "Anti-Turtle thread beginning now - ID:" SPC %game.turtleSchedule);
+	   error(formatTimeString("HH:nn:ss") SPC "Anti-Turtle thread beginning now - ID:" SPC %game.turtleSchedule);
    }
 }
 
@@ -1311,7 +1226,6 @@ function CTFGame::awardScoreFlagTouch(%game, %cl, %flag)
    $dontScoreTimer[%team] = true;
    //tinman - needed to remove all game calls to "eval" for the PURE server...
    %game.schedule(%game.TOUCH_DELAY_MS, resetDontScoreTimer, %team);
-   //schedule(%game.TOUCH_DELAY_MS, 0, eval, "$dontScoreTimer["@%team@"] = false;");
    //schedule(%game.TOUCH_DELAY_MS, 0, eval, "$dontScoreTimer["@%team@"] = false;");
    $TeamScore[%team] += %game.SCORE_PER_TEAM_FLAG_TOUCH;
    messageAll('MsgTeamScoreIs', "", %team, $TeamScore[%team]);
@@ -1792,9 +1706,6 @@ function CTFGame::boundaryLoseFlag(%game, %player)
    %flag.setCollisionTimeout(%player);
 
    %held = %game.formatTime(getSimTime() - %game.flagHeldTime[%flag], false); // z0dd - ZOD, 8/15/02. How long did player hold flag?
-
-   if($Host::ClassicEvoStats)
-      %game.totalFlagHeldTime[%flag] = 0;
 
    %game.playerDroppedFlag(%player);
 
