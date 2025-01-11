@@ -2265,7 +2265,7 @@ function LCTFGame::sendGameVoteMenu(%game, %client, %key)
    if(%game.scheduleVote $= "")
    {
       //echo(%client.ForceVote);
-      if(%client.ForceVote $= "skip_confirm")
+      if(%client.ForceVote $= "skip_confirm+")
          return;
 
       if(!%isAdmin || (%isAdmin && %client.ForceVote))

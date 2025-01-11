@@ -41,11 +41,13 @@ function DefaultGame::sendGameVoteMenu(%game, %client, %key)
    %multipleTeams = %game.numTeams > 1;
    %client.k = %key; //For set next mission
 
-   if (%client.ForceVote > 0)
+   if(%client.ForceVote > 0)
       %client.ForceVote = %client.ForceVote - 1;
+   if(%client.ForceVote $= "skip_confirm+")
+      %client.ForceVote = 0;
 
    //Admin Submenu
-   if (%client.ForceVote > 0)
+   if(%client.ForceVote > 0)
    {
       if(!$Host::TournamentMode)
          messageClient(%client, 'MsgVoteItem', "", %key, 'VoteTournamentMode', 'change server to Tournament.', 'Vote Tournament Mode');
@@ -67,6 +69,7 @@ function DefaultGame::sendGameVoteMenu(%game, %client, %key)
    {
       messageClient(%client, 'MsgVoteItem', "", %key, 'VoteSkipConfirm', 'Are you sure you want to Skip the Mission?','Are you sure you want to Skip the Mission?');
       messageClient(%client, 'MsgVoteItem', "", %key, 'VoteSkipMission', 'Yes, Skip the Mission', 'Yes, Skip the Mission' );
+      %client.ForceVote = "skip_confirm+";
       return;
    }
 
@@ -554,13 +557,13 @@ function serverCmdStartNewVote(%client, %typeName, %arg1, %arg2, %arg3, %arg4, %
 			}
 
 		case "VoteSkipConfirm":
-			if(%isAdmin && %client.ForceVote !$= "skip_confirm")
+			if(%client.ForceVote $= "skip_confirm+")
+            %client.ForceVote = 0;
+         else if(%isAdmin && %client.ForceVote !$= "skip_confirm")
 			{
             %client.ForceVote = "skip_confirm";
             return;
 			}
-         else
-            %client.ForceVote = 0;
 
 		case "VoteSkipMission":
 			if((!%isAdmin && $Host::AllowPlayerVoteSkipMission) || (%isAdmin && %client.ForceVote))
