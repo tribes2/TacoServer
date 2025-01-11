@@ -191,10 +191,9 @@ function ALTsendModInfoToClient(%client)
 		%rapeppl = "<color:" @ $Host::LoadScreenColor1 @ ">Min No Base Rape: <color:" @ $Host::LoadScreenColor2 @ ">" @ $Host::NoBaseRapePlayerCount;
 
 	%turrets = "<color:" @ $Host::LoadScreenColor1 @ ">Min Turrets: <color:" @ $Host::LoadScreenColor2 @ ">" @ $Host::EnableTurretPlayerCount;
-
-	if($Host::ClassicEvoStats && $Host::ClassicStatsType > 0)
-		%stats = "<color:" @ $Host::LoadScreenColor1 @ ">Stats based on: <color:" @ $Host::LoadScreenColor2 @ ">" @ ($Host::ClassicStatsType == 1 ? "Kills" : "Damage");
-
+	
+	if($dtStats::evoStyleDebrief)
+		%stats = "<color:" @ $Host::LoadScreenColor1 @ ">Stats based on: <color:" @ $Host::LoadScreenColor2 @ ">" @ "Kills & Damage";
 
 	%currentmis = "<color:" @ $Host::LoadScreenColor1 @ ">Current mission: <color:" @ $Host::LoadScreenColor2 @ ">" @  $MissionDisplayName @ " (" @ $MissionTypeDisplayName @ ")";
 
@@ -410,8 +409,8 @@ function NORMALsendModInfoToClient(%client)
 
 	%turrets = "<color:" @ $Host::LoadScreenColor1 @ ">Min Turrets: <color:" @ $Host::LoadScreenColor2 @ ">" @ $Host::EnableTurretPlayerCount;
 
-	if($Host::ClassicEvoStats && $Host::ClassicStatsType > 0)
-		%stats = "<color:" @ $Host::LoadScreenColor1 @ ">Stats based on: <color:" @ $Host::LoadScreenColor2 @ ">" @ ($Host::ClassicStatsType == 1 ? "Kills" : "Damage");
+	if($dtStats::evoStyleDebrief)
+		%stats = "<color:" @ $Host::LoadScreenColor1 @ ">Stats based on: <color:" @ $Host::LoadScreenColor2 @ ">" @ "Kills & Damage";
 
 	//if($Evo::ETMMode && $ETMmode::CurrentMap <= $ETMmode::Counter)
 	//{

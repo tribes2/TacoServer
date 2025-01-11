@@ -1248,30 +1248,6 @@ function loadMission( %missionName, %missionType, %firstMission )
          sendLoadInfoToClient( %client );
    }
 
-   if($Host::ClassicEvoStats)
-   {
-      deleteVariables("$*stats::*");
-      if(%missionType $= "CTF" || %missionType $= "SCtF")
-      {
-         %fileIn = "stats/maps/classic/" @ %missionType @ "/" @ %missionName @ ".txt";
-
-         // Initialize the file if not exist
-         if(!isFile(%fileIn))
-         {
-            $flagstats::heldTeam1 = 0;
-            $flagstats::realTeam1 = 0;
-            $flagstats::nickTeam1 = 0;
-            $flagstats::heldTeam2 = 0;
-            $flagstats::realTeam2 = 0;
-            $flagstats::nickTeam2 = 0;
-
-            export("$flagstats::*", %fileIn, false);
-         }
-
-         exec(%fileIn);
-      }
-   }
-
    // Eolk - Testing new stuff to make map rotation less stale.
    if($CurrentMissionType !$= %missionType && !%firstMission)
       deleteVariables("$MapPlayed*");
